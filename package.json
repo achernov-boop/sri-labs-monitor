@@ -1,0 +1,17 @@
+{
+  "name": "sri-labs-pr-monitor",
+  "version": "2.0.0",
+  "description": "SRI Labs PR Intelligence Dashboard",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "axios": "^1.6.0",
+    "cheerio": "^1.0.0-rc.12",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.0",
+    "xml2js": "^0.6.0"
+  }
+}

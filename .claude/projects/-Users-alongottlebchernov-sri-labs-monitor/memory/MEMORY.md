@@ -1,0 +1,1 @@
+- [Brand mentions only](feedback_brand_mentions.md) — Dashboard shows external mentions, never the brand's own content
