@@ -79,7 +79,7 @@
     .content { padding:24px 28px 48px; }
 
     /* ── KPI STRIP ───────────────────────────────────────── */
-    .kpi-row { display:grid; grid-template-columns:repeat(5,1fr); gap:14px; margin-bottom:24px; }
+    .kpi-row { display:grid; grid-template-columns:repeat(6,1fr); gap:14px; margin-bottom:24px; }
     .kpi { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:18px 20px; }
     .kpi-label { font-size:11px; font-weight:600; color:var(--dim); text-transform:uppercase; letter-spacing:.5px; margin-bottom:8px; }
     .kpi-val { font-size:32px; font-weight:800; line-height:1; color:var(--text); letter-spacing:-.5px; }
@@ -145,10 +145,12 @@
     .mr-icon { width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:14px; }
     .mr-icon.news { background:#EFF6FF; }
     .mr-icon.alerts { background:#F0FDF4; }
+    .mr-icon.reddit { background:#FFF1F0; }
     .mr-icon.social { background:var(--accent-l); }
     .mr-type { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; padding:3px 8px; border-radius:4px; text-align:center; }
     .mr-type.news { background:#DBEAFE; color:#1E40AF; }
     .mr-type.alerts { background:#DCFCE7; color:#166534; }
+    .mr-type.reddit { background:#FFF1F0; color:#FF4500; }
     .mr-type.social { background:#EDE9FE; color:#5B21B6; }
     .mr-body { padding:0 16px; min-width:0; }
     .mr-title { font-size:13px; font-weight:500; color:var(--text); line-height:1.4; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -247,12 +249,17 @@
         <div class="kpi-bar"><div class="kpi-bar-fill" id="kNegBar" style="background:var(--neg);width:0%"></div></div>
       </div>
       <div class="kpi">
-        <div class="kpi-label">News Mentions</div>
+        <div class="kpi-label">News</div>
         <div class="kpi-val" id="kNews">-</div>
-        <div class="kpi-footer"><span class="kpi-sub">News API</span></div>
+        <div class="kpi-footer"><span class="kpi-sub">News API + Bing</span></div>
       </div>
       <div class="kpi">
-        <div class="kpi-label">Social Mentions</div>
+        <div class="kpi-label">Reddit</div>
+        <div class="kpi-val" id="kReddit" style="color:#FF4500">-</div>
+        <div class="kpi-footer"><span class="kpi-sub">Posts &amp; comments</span></div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Social</div>
         <div class="kpi-val" id="kSocial">-</div>
         <div class="kpi-footer"><span class="kpi-sub">IG + FB</span></div>
       </div>
@@ -293,6 +300,7 @@
           <option value="all">All Sources</option>
           <option value="news">News</option>
           <option value="alerts">Google Alerts</option>
+          <option value="reddit">Reddit</option>
           <option value="social">Social</option>
         </select>
         <select class="tf-select" id="filterSentiment" onchange="applyFilters()">
@@ -375,9 +383,12 @@ async function loadAll() {
   document.getElementById('feedContainer').innerHTML = '<div class="loading"><div class="spinner"></div><span class="loading-text">Fetching mentions...</span></div>';
 
   try {
-    const [newsData, alertsData, igMentions, fbData] = await Promise.all([
+    const [newsData, alertsData, redditData, bingData, googleData, igMentions, fbData] = await Promise.all([
       fetch('/api/news').then(r=>r.json()).catch(()=>[]),
       fetch('/api/alerts').then(r=>r.json()).catch(()=>[]),
+      fetch('/api/reddit').then(r=>r.json()).catch(()=>[]),
+      fetch('/api/bing').then(r=>r.json()).catch(()=>[]),
+      fetch('/api/google').then(r=>r.json()).catch(()=>[]),
       fetch('/api/instagram/mentions').then(r=>r.json()).catch(()=>[]),
       fetch('/api/facebook').then(r=>r.json()).catch(()=>({status:'pending'})),
     ]);
@@ -388,7 +399,7 @@ async function loadAll() {
     ];
 
     const seen = new Set();
-    allMentions = [...(newsData||[]),...(alertsData||[]),...(igMentions||[]),...fbItems]
+    allMentions = [...(newsData||[]),...(alertsData||[]),...(redditData||[]),...(bingData||[]),...(googleData||[]),...(igMentions||[]),...fbItems]
       .filter(m => { if(!m.title) return false; const k=m.title.slice(0,80).toLowerCase(); if(seen.has(k)) return false; seen.add(k); return true; })
       .sort((a,b) => new Date(b.date)-new Date(a.date));
 
@@ -410,6 +421,7 @@ function updateKpis() {
   const p = allMentions.filter(m=>m.sentiment==='positive').length;
   const n = allMentions.filter(m=>m.sentiment==='negative').length;
   const news = allMentions.filter(m=>m.type==='news').length;
+  const reddit = allMentions.filter(m=>m.type==='reddit').length;
   const soc = allMentions.filter(m=>m.type==='social').length;
   const pct = v => t ? Math.round(v/t*100)+'%' : '-';
 
@@ -421,6 +433,7 @@ function updateKpis() {
   document.getElementById('kNegP').textContent = pct(n);
   document.getElementById('kNegBar').style.width = t ? Math.round(n/t*100)+'%' : '0%';
   document.getElementById('kNews').textContent = news;
+  document.getElementById('kReddit').textContent = reddit;
   document.getElementById('kSocial').textContent = soc;
 }
 
@@ -452,11 +465,12 @@ function updateCharts() {
 
   const newsC=allMentions.filter(m=>m.type==='news').length;
   const alertsC=allMentions.filter(m=>m.type==='alerts').length;
+  const redditC=allMentions.filter(m=>m.type==='reddit').length;
   const socC=allMentions.filter(m=>m.type==='social').length;
   if(sourceChart) sourceChart.destroy();
   sourceChart = new Chart(document.getElementById('sourceChart'),{
     type:'doughnut',
-    data:{labels:['News','Alerts','Social'],datasets:[{data:[newsC,alertsC,socC],backgroundColor:['#6366F1','#10B981','#F59E0B'],borderWidth:0,hoverOffset:6}]},
+    data:{labels:['News','Alerts','Reddit','Social'],datasets:[{data:[newsC,alertsC,redditC,socC],backgroundColor:['#6366F1','#10B981','#FF4500','#F59E0B'],borderWidth:0,hoverOffset:6}]},
     options:{cutout:'72%',plugins:{legend:{position:'bottom',labels:{boxWidth:8,padding:14,font:{size:11,family:'Inter'}}}}}
   });
 }
@@ -529,9 +543,9 @@ function applyFilters() {
   if(!filtered.length) { container.innerHTML='<div class="empty-state">No mentions match your filters.</div>'; return; }
 
   container.innerHTML = '<div class="mention-list">'+filtered.map(m => {
-    const icons={news:'&#128240;',alerts:'&#128276;',social:'&#128172;'};
+    const icons={news:'&#128240;',alerts:'&#128276;',reddit:'&#128488;',social:'&#128172;'};
     const icon=icons[m.type]||'&#128196;';
-    const typeLabel=m.type==='social'?(m.platform==='facebook'?'Facebook':'Instagram'):m.type==='news'?'News':'Alert';
+    const typeLabel=m.type==='reddit'?'Reddit':m.type==='social'?(m.platform==='facebook'?'Facebook':'Instagram'):m.type==='news'?'News':'Alert';
     return `<div class="mention-row">
       <div class="mr-icon ${esc(m.type)}">${icon}</div>
       <div><span class="mr-type ${esc(m.type)}">${typeLabel}</span></div>

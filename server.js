@@ -41,6 +41,11 @@ const CONFIG = {
     'https://www.google.com/alerts/feeds/01888235712276631613/589300702970366363',
   ],
 
+  // ── Additional search APIs ──
+  BING_API_KEY:       process.env.BING_API_KEY || '',
+  GOOGLE_CSE_KEY:     process.env.GOOGLE_CSE_KEY || '',
+  GOOGLE_CSE_ID:      process.env.GOOGLE_CSE_ID || '',
+
   // ── Meta / Instagram / Facebook ──
   INSTAGRAM_HANDLE:   'sri_labs_',
   META_APP_ID:        process.env.META_APP_ID || '',
@@ -483,6 +488,161 @@ app.get('/api/alerts', async (req, res) => {
 });
 
 
+// ── API: REDDIT ────────────────────────────────────────────────────────────────
+// Free, no API key needed — uses Reddit's public JSON endpoints
+app.get('/api/reddit', async (req, res) => {
+  try {
+    const items = await cached('reddit', 30 * 60 * 1000, async () => {
+      const results = [];
+      // Search top 4 keywords to stay within rate limits
+      const keywords = CONFIG.KEYWORDS.slice(0, 4);
+
+      for (const kw of keywords) {
+        try {
+          const { data } = await axios.get('https://www.reddit.com/search.json', {
+            params: { q: `"${kw}"`, sort: 'relevance', limit: 50, t: 'year' },
+            headers: { 'User-Agent': 'SRILabsBrandMonitor/2.0 (brand monitoring dashboard)' },
+            timeout: 10000,
+          });
+
+          const kwLower = kw.toLowerCase();
+          const posts = data?.data?.children || [];
+          posts.forEach(({ data: post }) => {
+            if (!post || post.over_18) return;
+            // Only keep posts that genuinely mention the keyword
+            const text = ((post.title || '') + ' ' + (post.selftext || '')).toLowerCase();
+            if (!text.includes(kwLower)) return;
+
+            results.push({
+              id:          `reddit-${post.id}`,
+              type:        'reddit',
+              sourceName:  `r/${post.subreddit}`,
+              title:       post.title || '',
+              description: (post.selftext || '').slice(0, 300),
+              url:         `https://reddit.com${post.permalink}`,
+              date:        new Date(post.created_utc * 1000).toISOString(),
+              sentiment:   analyzeSentiment((post.title || '') + ' ' + (post.selftext || '')),
+              engagement:  (post.score || 0) + (post.num_comments || 0),
+              matchedKeyword: kw,
+            });
+          });
+
+          // Respect Reddit rate limits
+          await new Promise(r => setTimeout(r, 1200));
+        } catch (e) {
+          console.warn(`[Reddit] Search error for "${kw}":`, e.message);
+        }
+      }
+
+      // Deduplicate by post ID
+      const seen = new Set();
+      return results.filter(r => { if (seen.has(r.id)) return false; seen.add(r.id); return true; });
+    });
+
+    console.log(`[Reddit] ${items.length} posts`);
+    res.json(items);
+  } catch (err) {
+    console.error('[Reddit] Error:', err.message);
+    res.json([]);
+  }
+});
+
+// ── API: BING NEWS ─────────────────────────────────────────────────────────────
+// Free tier: 1000 calls/month — sign up at https://portal.azure.com
+app.get('/api/bing', async (req, res) => {
+  if (!CONFIG.BING_API_KEY) return res.json([]);
+
+  try {
+    const items = await cached('bing', 15 * 60 * 1000, async () => {
+      const query = CONFIG.KEYWORDS.map(k => `"${k}"`).join(' OR ');
+      const { data } = await axios.get('https://api.bing.microsoft.com/v7.0/news/search', {
+        params: { q: query, count: 50, freshness: 'Month', mkt: 'en-US', sortBy: 'Date' },
+        headers: { 'Ocp-Apim-Subscription-Key': CONFIG.BING_API_KEY },
+        timeout: 10000,
+      });
+
+      return (data.value || []).map((article, i) => ({
+        id:          `bing-${i}-${Date.now()}`,
+        type:        'news',
+        sourceName:  article.provider?.[0]?.name || 'Bing News',
+        title:       article.name || '',
+        description: article.description || '',
+        url:         article.url || '',
+        date:        article.datePublished || new Date().toISOString(),
+        sentiment:   analyzeSentiment((article.name || '') + ' ' + (article.description || '')),
+        image:       article.image?.thumbnail?.contentUrl || null,
+      }));
+    });
+
+    console.log(`[Bing News] ${items.length} articles`);
+    res.json(items);
+  } catch (err) {
+    console.error('[Bing News] Error:', err.message);
+    res.json([]);
+  }
+});
+
+// ── API: GOOGLE CUSTOM SEARCH ──────────────────────────────────────────────────
+// Free tier: 100 queries/day — set up at https://programmablesearchengine.google.com
+app.get('/api/google', async (req, res) => {
+  if (!CONFIG.GOOGLE_CSE_KEY || !CONFIG.GOOGLE_CSE_ID) return res.json([]);
+
+  try {
+    const items = await cached('google_cse', 30 * 60 * 1000, async () => {
+      const results = [];
+      // Search top 3 keywords to stay within daily quota
+      const keywords = CONFIG.KEYWORDS.slice(0, 3);
+
+      for (const kw of keywords) {
+        try {
+          const { data } = await axios.get('https://www.googleapis.com/customsearch/v1', {
+            params: {
+              key: CONFIG.GOOGLE_CSE_KEY,
+              cx: CONFIG.GOOGLE_CSE_ID,
+              q: `"${kw}"`,
+              sort: 'date',
+              num: 10,
+              dateRestrict: 'm1', // last month
+            },
+            timeout: 10000,
+          });
+
+          (data.items || []).forEach((item, i) => {
+            results.push({
+              id:          `gcse-${kw.replace(/\s/g,'')}-${i}-${Date.now()}`,
+              type:        'news',
+              sourceName:  item.displayLink || 'Google Search',
+              title:       item.title || '',
+              description: item.snippet || '',
+              url:         item.link || '',
+              date:        item.pagemap?.metatags?.[0]?.['article:published_time']
+                        || item.pagemap?.metatags?.[0]?.['og:updated_time']
+                        || new Date().toISOString(),
+              sentiment:   analyzeSentiment((item.title || '') + ' ' + (item.snippet || '')),
+            });
+          });
+        } catch (e) {
+          console.warn(`[Google CSE] Search error for "${kw}":`, e.message);
+        }
+      }
+
+      const seen = new Set();
+      return results.filter(r => {
+        const key = r.title.slice(0, 60).toLowerCase();
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    });
+
+    console.log(`[Google CSE] ${items.length} results`);
+    res.json(items);
+  } catch (err) {
+    console.error('[Google CSE] Error:', err.message);
+    res.json([]);
+  }
+});
+
 // ── AUTH: META OAUTH — Step 1: redirect ────────────────────────────────────────
 app.get('/auth/meta', (req, res) => {
   if (!CONFIG.META_APP_ID) {
@@ -865,6 +1025,9 @@ app.listen(PORT, () => {
   console.log(`  Alerts     → ${CONFIG.GOOGLE_ALERT_FEEDS.length} Google Alert feeds`);
   console.log(`  Websites   → ${CONFIG.WEBSITES.map(w => w.baseUrl).join(', ')}`);
   const tokens = loadTokensCompat();
+  console.log(`  Reddit     → free (no key needed)`);
+  console.log(`  Bing News  → ${CONFIG.BING_API_KEY ? 'configured' : 'add BING_API_KEY to .env'}`);
+  console.log(`  Google CSE → ${CONFIG.GOOGLE_CSE_KEY ? 'configured' : 'add GOOGLE_CSE_KEY + GOOGLE_CSE_ID to .env'}`);
   console.log(`  Instagram  → @${CONFIG.INSTAGRAM_HANDLE} (${tokens?.igAccountId ? 'connected' : 'pending → visit /auth/meta'})`);
   console.log(`  Facebook   → ${tokens?.pageId ? 'connected (' + (tokens.pageName || tokens.pageId) + ')' : 'pending → visit /auth/meta'}`);
   console.log();
