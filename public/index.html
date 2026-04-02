@@ -3,362 +3,376 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SRI Labs · PR Intelligence Dashboard</title>
+  <title>SRI Labs — Brand Monitor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
-    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
     :root {
-      --navy:#0D2137; --blue:#065A82; --teal:#14B8A6; --teal-d:#0F766E; --teal-l:#CCFBF1;
-      --red:#F43F5E; --red-l:#FFE4E6; --amber:#F59E0B; --amber-l:#FEF3C7;
-      --purple:#7C3AED; --purple-l:#EDE9FE; --gray:#64748B; --bg:#F0F6FF;
-      --white:#FFFFFF; --border:#E2E8F0; --text:#1E293B; --muted:#94A3B8;
-      --ig-pink:#E1306C; --ig-pink-l:#FCE7F3; --fb-blue:#1877F2; --fb-blue-l:#DBEAFE;
-      --web-green:#059669; --web-green-l:#D1FAE5;
+      --sidebar:  #0F172A;
+      --sidebar-h:#1E293B;
+      --bg:       #F8FAFC;
+      --card:     #FFFFFF;
+      --border:   #E2E8F0;
+      --text:     #0F172A;
+      --text-2:   #334155;
+      --muted:    #94A3B8;
+      --dim:      #64748B;
+      --accent:   #6366F1;
+      --accent-l: #EEF2FF;
+      --pos:      #10B981;
+      --pos-l:    #D1FAE5;
+      --neg:      #EF4444;
+      --neg-l:    #FEE2E2;
+      --neu:      #F59E0B;
+      --neu-l:    #FEF3C7;
+      --ig:       #E1306C;
+      --fb:       #1877F2;
+      --radius:   10px;
     }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+    body { font-family:'Inter',system-ui,-apple-system,sans-serif; background:var(--bg); color:var(--text); display:flex; min-height:100vh; font-size:14px; }
 
-    /* ── HEADER ──────────────────────────────────────────────── */
-    .header { background:var(--navy); height:62px; padding:0 28px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; border-bottom:2px solid var(--teal); }
-    .hd-brand { display:flex; align-items:center; gap:12px; }
-    .hd-logo { width:38px; height:38px; background:var(--teal); border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:800; color:var(--navy); }
-    .hd-name { color:#fff; font-size:17px; font-weight:700; }
-    .hd-sub { color:#7BA8C4; font-size:12px; }
-    .hd-right { display:flex; align-items:center; gap:18px; }
-    .hd-live { display:flex; align-items:center; gap:6px; }
-    .hd-live-dot { width:8px; height:8px; background:var(--teal); border-radius:50%; animation:pulse 2s infinite; }
-    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(1.3)} }
-    .hd-live-text,.hd-time { color:#7BA8C4; font-size:12px; }
-    .btn-refresh { background:var(--teal); color:var(--navy); border:none; padding:8px 18px; border-radius:7px; font-size:13px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:6px; transition:background .2s,transform .1s; }
-    .btn-refresh:hover { background:var(--teal-d); }
-    .btn-refresh:active { transform:scale(.97); }
-    .btn-refresh:disabled { opacity:.55; cursor:not-allowed; }
-    .spin { display:inline-block; animation:spinA .7s linear infinite; }
-    @keyframes spinA { to{transform:rotate(360deg)} }
+    /* ── SIDEBAR ─────────────────────────────────────────── */
+    .sidebar { width:230px; background:var(--sidebar); display:flex; flex-direction:column; position:fixed; top:0; left:0; bottom:0; z-index:50; }
+    .sb-logo { padding:24px 22px 20px; border-bottom:1px solid rgba(255,255,255,.08); }
+    .sb-logo-mark { display:flex; align-items:center; gap:10px; }
+    .sb-logo-icon { width:34px; height:34px; background:var(--accent); border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:12px; color:#fff; letter-spacing:-.5px; }
+    .sb-logo-text { color:#F1F5F9; font-size:15px; font-weight:700; letter-spacing:-.3px; }
+    .sb-logo-sub { color:#475569; font-size:11px; margin-top:2px; font-weight:500; }
+    .sb-nav { padding:16px 0; flex:1; }
+    .sb-section { padding:0 16px; margin-bottom:20px; }
+    .sb-section-label { font-size:10px; font-weight:700; letter-spacing:1px; color:#475569; text-transform:uppercase; padding:0 6px; margin-bottom:8px; }
+    .sb-link { display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:8px; color:#94A3B8; font-size:13px; font-weight:500; cursor:pointer; transition:all .15s; text-decoration:none; }
+    .sb-link:hover { background:rgba(255,255,255,.06); color:#CBD5E1; }
+    .sb-link.active { background:rgba(99,102,241,.15); color:#A5B4FC; }
+    .sb-link-icon { width:18px; text-align:center; font-size:14px; flex-shrink:0; opacity:.7; }
+    .sb-divider { height:1px; background:rgba(255,255,255,.06); margin:8px 16px; }
+    .sb-footer { padding:16px 20px; border-top:1px solid rgba(255,255,255,.06); }
+    .sb-connect { display:flex; align-items:center; gap:8px; padding:8px 10px; border-radius:8px; font-size:12px; font-weight:500; color:#94A3B8; text-decoration:none; transition:all .15s; }
+    .sb-connect:hover { background:rgba(255,255,255,.06); color:#CBD5E1; }
+    .sb-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+    .sb-dot.on { background:var(--pos); }
+    .sb-dot.off { background:#475569; }
+    .sb-connect-label { flex:1; }
 
-    /* ── MAIN ────────────────────────────────────────────────── */
-    .main { max-width:1440px; margin:0 auto; padding:24px 22px 40px; }
+    /* ── MAIN ────────────────────────────────────────────── */
+    .main { margin-left:230px; flex:1; min-width:0; }
 
-    /* ── SECTION TITLE ───────────────────────────────────────── */
-    .section-title { font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:.6px; color:var(--gray); margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+    /* ── TOP BAR ─────────────────────────────────────────── */
+    .topbar { height:56px; background:var(--card); border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; padding:0 28px; position:sticky; top:0; z-index:40; }
+    .tb-left { display:flex; align-items:center; gap:14px; }
+    .tb-title { font-size:15px; font-weight:700; color:var(--text); }
+    .tb-live { display:flex; align-items:center; gap:6px; }
+    .tb-live-dot { width:7px; height:7px; background:var(--pos); border-radius:50%; animation:pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+    .tb-live-text { font-size:11px; color:var(--dim); font-weight:500; }
+    .tb-right { display:flex; align-items:center; gap:14px; }
+    .tb-time { font-size:12px; color:var(--muted); }
+    .tb-btn { background:var(--accent); color:#fff; border:none; padding:7px 16px; border-radius:7px; font-size:12px; font-weight:600; cursor:pointer; font-family:inherit; transition:opacity .15s; }
+    .tb-btn:hover { opacity:.9; }
+    .tb-btn:disabled { opacity:.4; cursor:not-allowed; }
+    .tb-btn-ghost { background:transparent; border:1px solid var(--border); color:var(--text-2); padding:7px 14px; border-radius:7px; font-size:12px; font-weight:500; cursor:pointer; font-family:inherit; transition:all .15s; }
+    .tb-btn-ghost:hover { border-color:#CBD5E1; background:#F1F5F9; }
 
-    /* ── SOCIAL MEDIA OVERVIEW ───────────────────────────────── */
-    .social-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px; }
-    .social-card { border-radius:12px; border:1px solid var(--border); overflow:hidden; box-shadow:0 1px 5px rgba(0,0,0,.06); background:var(--white); }
-    .social-header { padding:14px 20px; display:flex; align-items:center; gap:12px; color:#fff; }
-    .social-header.ig { background:linear-gradient(135deg,#833AB4 0%,#E1306C 50%,#F77737 100%); }
-    .social-header.fb { background:linear-gradient(135deg,#1877F2 0%,#0C5DC7 100%); }
-    .social-handle { font-size:16px; font-weight:700; }
-    .social-badge { margin-left:auto; background:rgba(255,255,255,.2); color:#fff; padding:4px 12px; border-radius:20px; font-size:11px; font-weight:700; }
-    .social-metrics { display:grid; grid-template-columns:repeat(4,1fr); border-bottom:1px solid var(--border); }
-    .social-metric { padding:14px; text-align:center; border-right:1px solid var(--border); }
-    .social-metric:last-child { border-right:none; }
-    .social-metric-val { font-size:22px; font-weight:800; line-height:1; }
-    .social-metric-val.ig-c { color:var(--ig-pink); }
-    .social-metric-val.fb-c { color:var(--fb-blue); }
-    .social-metric-lbl { font-size:10px; color:var(--gray); margin-top:4px; text-transform:uppercase; letter-spacing:.5px; font-weight:600; }
-    .social-posts { padding:14px 18px; }
-    .social-posts-title { font-size:11px; font-weight:700; color:var(--gray); text-transform:uppercase; letter-spacing:.5px; margin-bottom:10px; }
-    .ig-grid { display:grid; grid-template-columns:repeat(6,1fr); gap:6px; }
-    .ig-post { aspect-ratio:1; border-radius:6px; overflow:hidden; background:#F1F5F9; position:relative; cursor:pointer; display:block; }
-    .ig-post img { width:100%; height:100%; object-fit:cover; display:block; }
-    .ig-post-overlay { position:absolute; inset:0; background:rgba(0,0,0,.55); display:flex; flex-direction:column; align-items:center; justify-content:center; opacity:0; transition:opacity .2s; gap:3px; }
-    .ig-post:hover .ig-post-overlay { opacity:1; }
-    .ig-post-stat { color:#fff; font-size:11px; font-weight:600; }
-    .ig-post-placeholder { width:100%; height:100%; background:linear-gradient(135deg,#E9D5FF,#DDD6FE); display:flex; align-items:center; justify-content:center; font-size:20px; }
-    .fb-post-list { display:flex; flex-direction:column; gap:8px; }
-    .fb-post-item { display:flex; gap:10px; padding:8px 0; border-bottom:1px solid var(--border); font-size:13px; line-height:1.4; }
-    .fb-post-item:last-child { border-bottom:none; }
-    .fb-post-msg { flex:1; color:var(--text); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
-    .fb-post-eng { flex-shrink:0; font-size:11px; color:var(--muted); white-space:nowrap; }
-    .fb-post-date { flex-shrink:0; font-size:11px; color:var(--muted); min-width:50px; text-align:right; }
-    /* pending state */
-    .social-pending { background:linear-gradient(135deg,#F8FAFC 0%,#F1F5F9 100%); padding:20px; display:flex; align-items:center; gap:14px; }
-    .social-pending-icon { font-size:32px; }
-    .social-pending h3 { font-size:14px; font-weight:700; color:var(--text); }
-    .social-pending p { font-size:12px; color:var(--gray); margin-top:2px; }
-    .btn-connect { margin-left:auto; background:var(--navy); color:#fff; border:none; padding:10px 18px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; text-decoration:none; display:inline-block; transition:background .2s; }
-    .btn-connect:hover { background:var(--blue); }
+    /* ── CONTENT ─────────────────────────────────────────── */
+    .content { padding:24px 28px 48px; }
 
-    /* ── WEBSITE MONITOR ─────────────────────────────────────── */
-    .website-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px; }
-    .website-card { background:var(--white); border-radius:12px; border:1px solid var(--border); box-shadow:0 1px 5px rgba(0,0,0,.06); overflow:hidden; }
-    .website-header { background:linear-gradient(135deg,#059669 0%,#047857 100%); padding:12px 18px; display:flex; align-items:center; gap:10px; color:#fff; }
-    .website-header-name { font-size:14px; font-weight:700; }
-    .website-header-url { font-size:11px; opacity:.8; margin-left:auto; }
-    .website-items { padding:14px 18px; }
-    .website-item { padding:10px 0; border-bottom:1px solid var(--border); }
-    .website-item:last-child { border-bottom:none; }
-    .website-item-title { font-size:13px; font-weight:600; color:var(--text); line-height:1.4; }
-    .website-item-title a { color:inherit; text-decoration:none; }
-    .website-item-title a:hover { color:var(--blue); text-decoration:underline; }
-    .website-item-desc { font-size:12px; color:var(--gray); margin-top:3px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
-    .website-item-date { font-size:11px; color:var(--muted); margin-top:3px; }
-    .website-empty { padding:30px 18px; text-align:center; color:var(--muted); font-size:13px; }
-    .website-badge { font-size:11px; padding:3px 8px; border-radius:10px; font-weight:600; }
+    /* ── KPI STRIP ───────────────────────────────────────── */
+    .kpi-row { display:grid; grid-template-columns:repeat(5,1fr); gap:14px; margin-bottom:24px; }
+    .kpi { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:18px 20px; }
+    .kpi-label { font-size:11px; font-weight:600; color:var(--dim); text-transform:uppercase; letter-spacing:.5px; margin-bottom:8px; }
+    .kpi-val { font-size:32px; font-weight:800; line-height:1; color:var(--text); letter-spacing:-.5px; }
+    .kpi-val.pos { color:var(--pos); }
+    .kpi-val.neg { color:var(--neg); }
+    .kpi-val.neu { color:var(--neu); }
+    .kpi-footer { display:flex; align-items:center; gap:6px; margin-top:8px; }
+    .kpi-pct { font-size:12px; font-weight:600; padding:2px 6px; border-radius:4px; }
+    .kpi-pct.pos { background:var(--pos-l); color:#065F46; }
+    .kpi-pct.neg { background:var(--neg-l); color:#991B1B; }
+    .kpi-pct.neu { background:var(--neu-l); color:#92400E; }
+    .kpi-sub { font-size:11px; color:var(--muted); }
+    .kpi-bar { height:3px; background:var(--border); border-radius:3px; margin-top:10px; overflow:hidden; }
+    .kpi-bar-fill { height:100%; border-radius:3px; transition:width .6s ease; }
 
-    /* ── KEYWORD TAGS ────────────────────────────────────────── */
-    .kw-row { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-bottom:20px; }
-    .kw-label { font-size:11px; font-weight:700; letter-spacing:.8px; color:var(--gray); text-transform:uppercase; }
-    .kw-tag { background:var(--navy); color:#B0CAE0; padding:5px 12px; border-radius:20px; font-size:12px; font-weight:500; cursor:pointer; border:1px solid rgba(255,255,255,.1); transition:background .15s,color .15s; }
-    .kw-tag:hover { background:var(--blue); color:#fff; }
-    .kw-tag.active { background:var(--teal); color:var(--navy); border-color:var(--teal); }
+    /* ── KEYWORD PILLS ───────────────────────────────────── */
+    .kw-strip { display:flex; align-items:center; gap:8px; margin-bottom:24px; flex-wrap:wrap; }
+    .kw-label { font-size:11px; font-weight:600; color:var(--dim); text-transform:uppercase; letter-spacing:.5px; }
+    .kw-pill { padding:5px 14px; border-radius:20px; font-size:12px; font-weight:500; cursor:pointer; border:1px solid var(--border); background:var(--card); color:var(--text-2); transition:all .15s; }
+    .kw-pill:hover { border-color:#CBD5E1; background:#F1F5F9; }
+    .kw-pill.active { background:var(--accent); color:#fff; border-color:var(--accent); }
 
-    /* ── STATS GRID ──────────────────────────────────────────── */
-    .stats-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:12px; margin-bottom:20px; }
-    .stat-card { background:var(--white); border-radius:12px; padding:16px 18px; border:1px solid var(--border); box-shadow:0 1px 5px rgba(0,0,0,.06); }
-    .stat-label { font-size:10px; font-weight:700; letter-spacing:.7px; text-transform:uppercase; color:var(--gray); margin-bottom:6px; }
-    .stat-val { font-size:26px; font-weight:800; color:var(--text); line-height:1; }
-    .stat-val.pos { color:var(--teal); }
-    .stat-val.neg { color:var(--red); }
-    .stat-val.neu { color:var(--amber); }
-    .stat-val.web { color:var(--web-green); }
-    .stat-val.soc { color:var(--ig-pink); }
-    .stat-sub { font-size:10px; color:var(--muted); margin-top:4px; }
-    .stat-bar-wrap { height:3px; background:var(--border); border-radius:3px; margin-top:6px; overflow:hidden; }
-    .stat-bar { height:100%; border-radius:3px; transition:width .6s ease; }
+    /* ── CHARTS ──────────────────────────────────────────── */
+    .charts-row { display:grid; grid-template-columns:1fr 300px; gap:14px; margin-bottom:24px; }
+    .panel { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); }
+    .panel-head { padding:16px 20px 0; display:flex; align-items:center; justify-content:space-between; }
+    .panel-title { font-size:12px; font-weight:700; color:var(--dim); text-transform:uppercase; letter-spacing:.4px; }
+    .panel-body { padding:16px 20px 20px; }
+    .chart-wrap { height:200px; }
+    .donut-wrap { height:200px; display:flex; align-items:center; justify-content:center; }
 
-    /* ── CHARTS ROW ──────────────────────────────────────────── */
-    .charts-row { display:grid; grid-template-columns:250px 1fr 250px; gap:16px; margin-bottom:20px; }
-    .chart-card { background:var(--white); border-radius:12px; padding:20px; border:1px solid var(--border); box-shadow:0 1px 5px rgba(0,0,0,.06); }
-    .chart-title { font-size:11px; font-weight:700; letter-spacing:.6px; text-transform:uppercase; color:var(--gray); margin-bottom:14px; }
-    .donut-wrap { height:195px; display:flex; align-items:center; justify-content:center; }
-    .line-wrap { height:195px; }
+    /* ── SOCIAL STRIP ────────────────────────────────────── */
+    .social-strip { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:24px; }
+    .social-mini { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:16px 20px; display:flex; align-items:center; gap:16px; }
+    .social-mini-icon { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+    .social-mini-icon.ig { background:linear-gradient(135deg,#833AB4,#E1306C,#F77737); }
+    .social-mini-icon.fb { background:var(--fb); }
+    .social-mini-icon span { filter:brightness(0) invert(1); }
+    .social-mini-info { flex:1; min-width:0; }
+    .social-mini-name { font-size:13px; font-weight:600; color:var(--text); }
+    .social-mini-sub { font-size:11px; color:var(--muted); margin-top:1px; }
+    .social-mini-stats { display:flex; gap:16px; }
+    .social-mini-stat { text-align:right; }
+    .social-mini-stat-val { font-size:18px; font-weight:700; color:var(--text); line-height:1; }
+    .social-mini-stat-lbl { font-size:10px; color:var(--muted); margin-top:2px; text-transform:uppercase; letter-spacing:.3px; }
+    .social-pending-link { font-size:12px; font-weight:600; color:var(--accent); text-decoration:none; margin-left:auto; }
+    .social-pending-link:hover { text-decoration:underline; }
 
-    /* ── TOP SOURCES ─────────────────────────────────────────── */
-    .sources-row { display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap; }
-    .source-pill { background:var(--white); border:1px solid var(--border); border-radius:8px; padding:8px 14px; display:flex; align-items:center; gap:8px; box-shadow:0 1px 4px rgba(0,0,0,.05); }
-    .source-pill-name { font-size:12px; font-weight:600; color:var(--text); }
-    .source-pill-ct { font-size:12px; font-weight:700; color:var(--teal); }
+    /* ── MENTION TABLE ───────────────────────────────────── */
+    .table-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+    .table-title { font-size:13px; font-weight:700; color:var(--text); }
+    .table-count { font-size:12px; color:var(--muted); }
+    .table-filters { display:flex; gap:8px; align-items:center; margin-bottom:14px; flex-wrap:wrap; }
+    .tf-select { border:1px solid var(--border); border-radius:7px; padding:7px 12px; font-size:12px; font-family:inherit; color:var(--text-2); background:var(--card); cursor:pointer; transition:border-color .15s; }
+    .tf-select:focus { outline:none; border-color:var(--accent); }
+    .tf-search { border:1px solid var(--border); border-radius:7px; padding:7px 12px; font-size:12px; font-family:inherit; color:var(--text); background:var(--card); flex:1; min-width:200px; transition:border-color .15s; }
+    .tf-search:focus { outline:none; border-color:var(--accent); }
+    .tf-divider { width:1px; height:20px; background:var(--border); }
 
-    /* ── FILTERS ─────────────────────────────────────────────── */
-    .filters { background:var(--white); border-radius:12px; padding:14px 18px; border:1px solid var(--border); box-shadow:0 1px 5px rgba(0,0,0,.06); margin-bottom:16px; display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
-    .filter-label { font-size:11.5px; font-weight:700; color:var(--gray); text-transform:uppercase; letter-spacing:.6px; }
-    .filter-select,.search-input { border:1px solid var(--border); border-radius:7px; padding:7px 11px; font-size:13px; color:var(--text); background:var(--white); transition:border-color .2s,box-shadow .2s; }
-    .filter-select { cursor:pointer; }
-    .filter-select:focus,.search-input:focus { outline:none; border-color:var(--teal); box-shadow:0 0 0 3px rgba(20,184,166,.15); }
-    .search-input { flex:1; min-width:200px; }
-    .filter-count { margin-left:auto; font-size:12px; color:var(--muted); }
-    .filter-divider { width:1px; height:22px; background:var(--border); }
-    .btn-export { background:var(--navy); color:#fff; border:none; padding:7px 14px; border-radius:7px; font-size:12px; font-weight:600; cursor:pointer; transition:background .2s; }
-    .btn-export:hover { background:var(--blue); }
+    .mention-list { display:flex; flex-direction:column; gap:1px; background:var(--border); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
+    .mention-row { background:var(--card); display:grid; grid-template-columns:42px 64px 1fr 100px 90px; gap:0; align-items:center; padding:12px 16px; transition:background .1s; }
+    .mention-row:hover { background:#F8FAFC; }
+    .mr-icon { width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:14px; }
+    .mr-icon.news { background:#EFF6FF; }
+    .mr-icon.alerts { background:#F0FDF4; }
+    .mr-icon.social { background:var(--accent-l); }
+    .mr-type { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; padding:3px 8px; border-radius:4px; text-align:center; }
+    .mr-type.news { background:#DBEAFE; color:#1E40AF; }
+    .mr-type.alerts { background:#DCFCE7; color:#166534; }
+    .mr-type.social { background:#EDE9FE; color:#5B21B6; }
+    .mr-body { padding:0 16px; min-width:0; }
+    .mr-title { font-size:13px; font-weight:500; color:var(--text); line-height:1.4; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .mr-title a { color:inherit; text-decoration:none; }
+    .mr-title a:hover { color:var(--accent); }
+    .mr-meta { font-size:11px; color:var(--muted); margin-top:2px; display:flex; gap:6px; align-items:center; }
+    .mr-meta-dot { width:3px; height:3px; background:var(--muted); border-radius:50%; }
+    .mr-sentiment { text-align:center; }
+    .mr-badge { display:inline-block; padding:4px 10px; border-radius:20px; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.3px; }
+    .mr-badge.positive { background:var(--pos-l); color:#065F46; }
+    .mr-badge.neutral { background:var(--neu-l); color:#92400E; }
+    .mr-badge.negative { background:var(--neg-l); color:#991B1B; }
+    .mr-date { font-size:11px; color:var(--muted); text-align:right; }
 
-    /* ── FEED HEADER ─────────────────────────────────────────── */
-    .feed-hdr { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
-    .feed-hdr-title { font-size:13px; font-weight:700; color:var(--text); text-transform:uppercase; letter-spacing:.5px; }
+    /* ── LOADING / EMPTY ─────────────────────────────────── */
+    .loading { display:flex; flex-direction:column; align-items:center; padding:60px 20px; color:var(--muted); gap:12px; }
+    .spinner { width:28px; height:28px; border:2.5px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin .7s linear infinite; }
+    @keyframes spin { to{transform:rotate(360deg)} }
+    .loading-text { font-size:13px; }
+    .empty-state { text-align:center; padding:48px 20px; color:var(--muted); font-size:13px; }
 
-    /* ── MENTION CARDS ───────────────────────────────────────── */
-    #feedContainer { display:flex; flex-direction:column; gap:10px; }
-    .mention-card { background:var(--white); border-radius:12px; border:1px solid var(--border); box-shadow:0 1px 5px rgba(0,0,0,.06); padding:14px 18px; display:grid; grid-template-columns:42px 1fr auto; gap:12px; align-items:start; transition:box-shadow .2s,border-color .2s; }
-    .mention-card:hover { box-shadow:0 6px 20px rgba(0,0,0,.10); border-color:#CBD5E1; }
-    .m-icon { width:42px; height:42px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
-    .m-icon.news { background:#EFF6FF; }
-    .m-icon.alerts { background:#F0FDF4; }
-    .m-icon.website { background:var(--web-green-l); }
-    .m-icon.social { background:var(--ig-pink-l); }
-    .m-icon.social.fb { background:var(--fb-blue-l); }
-    .m-body { min-width:0; }
-    .m-meta { display:flex; align-items:center; gap:7px; margin-bottom:4px; flex-wrap:wrap; }
-    .m-type-badge { font-size:10px; font-weight:700; letter-spacing:.6px; text-transform:uppercase; padding:2px 7px; border-radius:4px; }
-    .m-type-badge.news { background:#DBEAFE; color:#1D4ED8; }
-    .m-type-badge.alerts { background:#DCFCE7; color:#166534; }
-    .m-type-badge.website { background:var(--web-green-l); color:#065F46; }
-    .m-type-badge.social { background:var(--ig-pink-l); color:#9D174D; }
-    .m-type-badge.social.fb { background:var(--fb-blue-l); color:#1E40AF; }
-    .m-source { font-size:12px; font-weight:600; color:var(--gray); }
-    .m-dot { width:3px; height:3px; background:var(--muted); border-radius:50%; flex-shrink:0; }
-    .m-time { font-size:12px; color:var(--muted); }
-    .m-title { font-size:14px; font-weight:600; color:var(--text); line-height:1.45; margin-bottom:4px; }
-    .m-title a { color:inherit; text-decoration:none; }
-    .m-title a:hover { color:var(--blue); text-decoration:underline; }
-    .m-desc { font-size:13px; color:var(--gray); line-height:1.55; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
-    .m-right { display:flex; flex-direction:column; align-items:flex-end; gap:4px; }
-    .m-badge { padding:5px 12px; border-radius:20px; font-size:11px; font-weight:700; letter-spacing:.3px; text-transform:uppercase; flex-shrink:0; }
-    .m-badge.positive { background:var(--teal-l); color:var(--teal-d); }
-    .m-badge.neutral { background:var(--amber-l); color:#92400E; }
-    .m-badge.negative { background:var(--red-l); color:#BE123C; }
-    .m-engagement { font-size:10px; color:var(--muted); }
-
-    /* ── LOADING / EMPTY ─────────────────────────────────────── */
-    .loading { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:60px 20px; color:var(--muted); gap:14px; }
-    .spinner { width:36px; height:36px; border:3px solid var(--border); border-top-color:var(--teal); border-radius:50%; animation:spinA .8s linear infinite; }
-    .loading-text { font-size:14px; }
-    .empty { text-align:center; padding:40px; color:var(--muted); font-size:14px; }
-    .error-banner { background:var(--red-l); border:1px solid #FECDD3; border-radius:10px; padding:14px 18px; margin-bottom:16px; font-size:13px; color:#9F1239; }
-
-    /* ── RESPONSIVE ──────────────────────────────────────────── */
-    @media(max-width:1200px) {
-      .stats-grid { grid-template-columns:repeat(4,1fr); }
-      .charts-row { grid-template-columns:1fr 1fr; }
-    }
-    @media(max-width:900px) {
-      .social-row,.website-row { grid-template-columns:1fr; }
-      .stats-grid { grid-template-columns:repeat(2,1fr); }
-      .charts-row { grid-template-columns:1fr; }
-      .ig-grid { grid-template-columns:repeat(3,1fr); }
-    }
+    /* ── RESPONSIVE ──────────────────────────────────────── */
+    @media(max-width:1100px) { .kpi-row{grid-template-columns:repeat(3,1fr)} .charts-row{grid-template-columns:1fr} .social-strip{grid-template-columns:1fr} }
+    @media(max-width:768px) { .sidebar{display:none} .main{margin-left:0} .kpi-row{grid-template-columns:repeat(2,1fr)} .mention-row{grid-template-columns:42px 1fr 80px} .mr-type,.mr-date{display:none} }
   </style>
 </head>
 <body>
 
-<header class="header">
-  <div class="hd-brand">
-    <div class="hd-logo">SRI</div>
-    <div>
-      <div class="hd-name">SRI Labs PR Intelligence</div>
-      <div class="hd-sub">Comprehensive Brand Monitor</div>
+<!-- ── SIDEBAR ──────────────────────────────────────────── -->
+<aside class="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-mark">
+      <div class="sb-logo-icon">SRI</div>
+      <div>
+        <div class="sb-logo-text">Brand Monitor</div>
+        <div class="sb-logo-sub">SRI Labs</div>
+      </div>
     </div>
   </div>
-  <div class="hd-right">
-    <div class="hd-live"><div class="hd-live-dot"></div><span class="hd-live-text">Live</span></div>
-    <span class="hd-time" id="lastUpdated">Connecting...</span>
-    <button class="btn-refresh" id="refreshBtn" onclick="loadAll()"><span id="refreshIcon">&#x27F3;</span> Refresh</button>
-  </div>
-</header>
-
-<main class="main">
-
-  <!-- Social Media Overview -->
-  <div class="section-title">Social Media</div>
-  <div class="social-row">
-    <div id="igPanel" class="social-card"></div>
-    <div id="fbPanel" class="social-card"></div>
-  </div>
-
-  <!-- Keyword Tags -->
-  <div class="kw-row">
-    <span class="kw-label">Track:</span>
-    <div id="keywordTags" style="display:contents"></div>
-  </div>
-
-  <!-- Stats -->
-  <div class="stats-grid" id="statsGrid">
-    <div class="stat-card"><div class="stat-label">Total Mentions</div><div class="stat-val" id="sTotal">-</div><div class="stat-sub">All sources</div></div>
-    <div class="stat-card"><div class="stat-label">Positive</div><div class="stat-val pos" id="sPos">-</div><div class="stat-sub" id="sPosP">-</div><div class="stat-bar-wrap"><div class="stat-bar" id="sPosBar" style="background:var(--teal);width:0%"></div></div></div>
-    <div class="stat-card"><div class="stat-label">Neutral</div><div class="stat-val neu" id="sNeu">-</div><div class="stat-sub" id="sNeuP">-</div><div class="stat-bar-wrap"><div class="stat-bar" id="sNeuBar" style="background:var(--amber);width:0%"></div></div></div>
-    <div class="stat-card"><div class="stat-label">Negative</div><div class="stat-val neg" id="sNeg">-</div><div class="stat-sub" id="sNegP">-</div><div class="stat-bar-wrap"><div class="stat-bar" id="sNegBar" style="background:var(--red);width:0%"></div></div></div>
-    <div class="stat-card"><div class="stat-label">News</div><div class="stat-val" id="sNews">-</div><div class="stat-sub">News API</div></div>
-    <div class="stat-card"><div class="stat-label">Alerts</div><div class="stat-val" id="sAlerts">-</div><div class="stat-sub">Google Alerts</div></div>
-    <div class="stat-card"><div class="stat-label">Social</div><div class="stat-val soc" id="sSocial">-</div><div class="stat-sub">IG + FB mentions</div></div>
-  </div>
-
-  <!-- Charts -->
-  <div class="charts-row">
-    <div class="chart-card">
-      <div class="chart-title">Sentiment Breakdown</div>
-      <div class="donut-wrap"><canvas id="sentimentChart"></canvas></div>
+  <nav class="sb-nav">
+    <div class="sb-section">
+      <div class="sb-section-label">Monitor</div>
+      <a class="sb-link active" href="#"><span class="sb-link-icon">&#9632;</span> Overview</a>
+      <a class="sb-link" href="#mentions-section"><span class="sb-link-icon">&#9776;</span> Mentions</a>
     </div>
-    <div class="chart-card">
-      <div class="chart-title">Mention Volume - Last 14 Days</div>
-      <div class="line-wrap"><canvas id="timelineChart"></canvas></div>
+    <div class="sb-divider"></div>
+    <div class="sb-section">
+      <div class="sb-section-label">Tracking</div>
+      <div id="sbKeywords"></div>
     </div>
-    <div class="chart-card">
-      <div class="chart-title">Source Distribution</div>
-      <div class="donut-wrap"><canvas id="sourceChart"></canvas></div>
+  </nav>
+  <div class="sb-footer">
+    <div style="font-size:10px;font-weight:600;color:#475569;text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Connections</div>
+    <div id="sbIgStatus">
+      <a class="sb-connect" href="/auth/meta"><span class="sb-dot off"></span><span class="sb-connect-label">Instagram</span><span style="font-size:11px;color:#475569">Connect</span></a>
+    </div>
+    <div id="sbFbStatus">
+      <a class="sb-connect" href="/auth/meta"><span class="sb-dot off"></span><span class="sb-connect-label">Facebook</span><span style="font-size:11px;color:#475569">Connect</span></a>
     </div>
   </div>
+</aside>
 
-  <!-- Top Sources -->
-  <div id="sourcesSection" style="display:none">
-    <div class="section-title">Top Sources</div>
-    <div class="sources-row" id="sourcesPills"></div>
-  </div>
+<!-- ── MAIN ────────────────────────────────────────────── -->
+<div class="main">
+  <header class="topbar">
+    <div class="tb-left">
+      <span class="tb-title">Overview</span>
+      <div class="tb-live"><div class="tb-live-dot"></div><span class="tb-live-text">Live</span></div>
+    </div>
+    <div class="tb-right">
+      <span class="tb-time" id="lastUpdated"></span>
+      <button class="tb-btn-ghost" onclick="exportCsv()">Export CSV</button>
+      <button class="tb-btn" id="refreshBtn" onclick="loadAll()">Refresh</button>
+    </div>
+  </header>
 
-  <!-- Filters -->
-  <div class="filters">
-    <span class="filter-label">Filter</span>
-    <div class="filter-divider"></div>
-    <select class="filter-select" id="filterSource" onchange="applyFilters()">
-      <option value="all">All Sources</option>
-      <option value="news">News</option>
-      <option value="alerts">Google Alerts</option>
-      <option value="social">Social Media</option>
-    </select>
-    <select class="filter-select" id="filterSentiment" onchange="applyFilters()">
-      <option value="all">All Sentiments</option>
-      <option value="positive">Positive</option>
-      <option value="neutral">Neutral</option>
-      <option value="negative">Negative</option>
-    </select>
-    <select class="filter-select" id="filterSort" onchange="applyFilters()">
-      <option value="date">Newest First</option>
-      <option value="sentiment">Sentiment</option>
-    </select>
-    <div class="filter-divider"></div>
-    <input class="search-input" type="text" id="searchInput" placeholder="Search mentions..." oninput="applyFilters()" />
-    <span class="filter-count" id="filterCount"></span>
-    <button class="btn-export" onclick="exportCsv()">Export CSV</button>
-  </div>
+  <div class="content">
 
-  <!-- Feed -->
-  <div class="feed-hdr">
-    <div class="feed-hdr-title">Mention Feed</div>
-  </div>
-  <div id="feedContainer">
-    <div class="loading"><div class="spinner"></div><span class="loading-text">Fetching mentions from all sources...</span></div>
-  </div>
+    <!-- KPIs -->
+    <div class="kpi-row">
+      <div class="kpi">
+        <div class="kpi-label">Total Mentions</div>
+        <div class="kpi-val" id="kTotal">-</div>
+        <div class="kpi-footer"><span class="kpi-sub">across all sources</span></div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Positive</div>
+        <div class="kpi-val pos" id="kPos">-</div>
+        <div class="kpi-footer"><span class="kpi-pct pos" id="kPosP">-</span><span class="kpi-sub">of total</span></div>
+        <div class="kpi-bar"><div class="kpi-bar-fill" id="kPosBar" style="background:var(--pos);width:0%"></div></div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Negative</div>
+        <div class="kpi-val neg" id="kNeg">-</div>
+        <div class="kpi-footer"><span class="kpi-pct neg" id="kNegP">-</span><span class="kpi-sub">of total</span></div>
+        <div class="kpi-bar"><div class="kpi-bar-fill" id="kNegBar" style="background:var(--neg);width:0%"></div></div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">News Mentions</div>
+        <div class="kpi-val" id="kNews">-</div>
+        <div class="kpi-footer"><span class="kpi-sub">News API</span></div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Social Mentions</div>
+        <div class="kpi-val" id="kSocial">-</div>
+        <div class="kpi-footer"><span class="kpi-sub">IG + FB</span></div>
+      </div>
+    </div>
 
-</main>
+    <!-- Social strip -->
+    <div class="social-strip">
+      <div class="social-mini" id="igMini"></div>
+      <div class="social-mini" id="fbMini"></div>
+    </div>
+
+    <!-- Keyword pills -->
+    <div class="kw-strip">
+      <span class="kw-label">Filter by keyword</span>
+      <div id="kwPills" style="display:contents"></div>
+    </div>
+
+    <!-- Charts -->
+    <div class="charts-row">
+      <div class="panel">
+        <div class="panel-head"><span class="panel-title">Mention Volume &mdash; 14 Days</span></div>
+        <div class="panel-body"><div class="chart-wrap"><canvas id="timelineChart"></canvas></div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><span class="panel-title">Sources</span></div>
+        <div class="panel-body"><div class="donut-wrap"><canvas id="sourceChart"></canvas></div></div>
+      </div>
+    </div>
+
+    <!-- Mentions table -->
+    <div id="mentions-section">
+      <div class="table-head">
+        <span class="table-title">All Mentions</span>
+        <span class="table-count" id="mentionCount"></span>
+      </div>
+      <div class="table-filters">
+        <select class="tf-select" id="filterSource" onchange="applyFilters()">
+          <option value="all">All Sources</option>
+          <option value="news">News</option>
+          <option value="alerts">Google Alerts</option>
+          <option value="social">Social</option>
+        </select>
+        <select class="tf-select" id="filterSentiment" onchange="applyFilters()">
+          <option value="all">All Sentiment</option>
+          <option value="positive">Positive</option>
+          <option value="neutral">Neutral</option>
+          <option value="negative">Negative</option>
+        </select>
+        <select class="tf-select" id="filterSort" onchange="applyFilters()">
+          <option value="date">Newest</option>
+          <option value="sentiment">Sentiment</option>
+        </select>
+        <div class="tf-divider"></div>
+        <input class="tf-search" type="text" id="searchInput" placeholder="Search mentions..." oninput="applyFilters()" />
+      </div>
+      <div id="feedContainer">
+        <div class="loading"><div class="spinner"></div><span class="loading-text">Fetching mentions...</span></div>
+      </div>
+    </div>
+
+  </div>
+</div>
 
 <script>
-// ── STATE ─────────────────────────────────────────────────────────────────────
 let allMentions = [];
-let sentimentChart = null;
 let timelineChart = null;
 let sourceChart = null;
 let activeKeyword = null;
 
-// ── HELPERS ───────────────────────────────────────────────────────────────────
-function esc(s) {
-  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
+function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function timeAgo(ds) {
   const diff = Date.now() - new Date(ds).getTime();
   if (isNaN(diff)) return '';
   const m = Math.floor(diff/60000);
-  if (m < 1) return 'just now';
-  if (m < 60) return m+'m ago';
+  if (m<1) return 'now';
+  if (m<60) return m+'m';
   const h = Math.floor(m/60);
-  if (h < 24) return h+'h ago';
-  const d = Math.floor(h/24);
-  return d+'d ago';
+  if (h<24) return h+'h';
+  return Math.floor(h/24)+'d';
 }
 function fmtNum(n) {
-  if (n == null) return '-';
-  if (n >= 1000000) return (n/1000000).toFixed(1)+'M';
-  if (n >= 1000) return (n/1000).toFixed(1)+'K';
+  if (n==null) return '-';
+  if (n>=1e6) return (n/1e6).toFixed(1)+'M';
+  if (n>=1e3) return (n/1e3).toFixed(1)+'K';
   return String(n);
 }
-function fmtDate(ds) {
-  try { return new Date(ds).toLocaleDateString([], {month:'short',day:'numeric',year:'numeric'}); }
-  catch(_) { return ''; }
-}
 
-// ── CONFIG ────────────────────────────────────────────────────────────────────
+// ── Config + keyword pills ───────────────────────────────
 async function loadConfig() {
   try {
     const cfg = await fetch('/api/config').then(r=>r.json());
-    const container = document.getElementById('keywordTags');
+    const pills = document.getElementById('kwPills');
+    const sbKw = document.getElementById('sbKeywords');
     cfg.keywords.forEach(kw => {
+      // Pill
       const el = document.createElement('span');
-      el.className = 'kw-tag';
+      el.className = 'kw-pill';
       el.textContent = kw;
       el.onclick = () => {
-        if (activeKeyword === kw) { activeKeyword = null; document.querySelectorAll('.kw-tag').forEach(t=>t.classList.remove('active')); }
-        else { activeKeyword = kw; document.querySelectorAll('.kw-tag').forEach(t=>t.classList.remove('active')); el.classList.add('active'); }
+        if (activeKeyword===kw) { activeKeyword=null; document.querySelectorAll('.kw-pill').forEach(t=>t.classList.remove('active')); }
+        else { activeKeyword=kw; document.querySelectorAll('.kw-pill').forEach(t=>t.classList.remove('active')); el.classList.add('active'); }
         applyFilters();
       };
-      container.appendChild(el);
+      pills.appendChild(el);
+      // Sidebar
+      const sb = document.createElement('a');
+      sb.className = 'sb-link';
+      sb.href = '#';
+      sb.innerHTML = '<span class="sb-link-icon" style="font-size:8px;opacity:.4">&#9679;</span> ' + esc(kw);
+      sb.onclick = (e) => { e.preventDefault(); el.click(); };
+      sbKw.appendChild(sb);
     });
-  } catch(_) {}
+  } catch(_){}
 }
 
-// ── LOAD ALL ──────────────────────────────────────────────────────────────────
+// ── Load all data ────────────────────────────────────────
 async function loadAll() {
   const btn = document.getElementById('refreshBtn');
-  const icon = document.getElementById('refreshIcon');
-  btn.disabled = true; icon.className = 'spin';
-
-  document.getElementById('feedContainer').innerHTML = '<div class="loading"><div class="spinner"></div><span class="loading-text">Fetching latest mentions...</span></div>';
+  btn.disabled = true; btn.textContent = 'Loading...';
+  document.getElementById('feedContainer').innerHTML = '<div class="loading"><div class="spinner"></div><span class="loading-text">Fetching mentions...</span></div>';
 
   try {
     const [newsData, alertsData, igMentions, fbData] = await Promise.all([
@@ -368,296 +382,204 @@ async function loadAll() {
       fetch('/api/facebook').then(r=>r.json()).catch(()=>({status:'pending'})),
     ]);
 
-    // Extract FB posts + mentions as mention items
-    const fbMentionItems = [
-      ...((fbData.posts || []).map(p => ({...p, type:'social', platform:'facebook'}))),
-      ...((fbData.mentions || []).map(m => ({...m, type:'social', platform:'facebook'}))),
+    const fbItems = [
+      ...((fbData.posts||[]).map(p=>({...p,type:'social',platform:'facebook'}))),
+      ...((fbData.mentions||[]).map(m=>({...m,type:'social',platform:'facebook'}))),
     ];
 
-    // Merge + deduplicate
     const seen = new Set();
-    allMentions = [...(newsData||[]), ...(alertsData||[]), ...(igMentions||[]), ...fbMentionItems]
-      .filter(m => {
-        if (!m.title) return false;
-        const key = m.title.slice(0,80).toLowerCase();
-        if (seen.has(key)) return false;
-        seen.add(key);
-        return true;
-      })
-      .sort((a,b) => new Date(b.date) - new Date(a.date));
+    allMentions = [...(newsData||[]),...(alertsData||[]),...(igMentions||[]),...fbItems]
+      .filter(m => { if(!m.title) return false; const k=m.title.slice(0,80).toLowerCase(); if(seen.has(k)) return false; seen.add(k); return true; })
+      .sort((a,b) => new Date(b.date)-new Date(a.date));
 
-    updateStats();
+    updateKpis();
     updateCharts();
-    updateSources();
     applyFilters();
-
-    document.getElementById('lastUpdated').textContent =
-      'Updated ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
-
+    document.getElementById('lastUpdated').textContent = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
   } catch(err) {
     console.error(err);
-    document.getElementById('feedContainer').innerHTML =
-      '<div class="error-banner">Could not load data. Make sure the server is running.</div>';
+    document.getElementById('feedContainer').innerHTML = '<div class="empty-state">Could not load data. Check that the server is running.</div>';
   } finally {
-    btn.disabled = false; icon.className = ''; icon.textContent = '\u27F3';
+    btn.disabled = false; btn.textContent = 'Refresh';
   }
 }
 
-// ── STATS ─────────────────────────────────────────────────────────────────────
-function updateStats() {
-  const total = allMentions.length;
-  const pos = allMentions.filter(m=>m.sentiment==='positive').length;
-  const neg = allMentions.filter(m=>m.sentiment==='negative').length;
-  const neu = allMentions.filter(m=>m.sentiment==='neutral').length;
-  const newsC = allMentions.filter(m=>m.type==='news').length;
-  const alertsC = allMentions.filter(m=>m.type==='alerts').length;
-  const socC = allMentions.filter(m=>m.type==='social').length;
+// ── KPIs ─────────────────────────────────────────────────
+function updateKpis() {
+  const t = allMentions.length;
+  const p = allMentions.filter(m=>m.sentiment==='positive').length;
+  const n = allMentions.filter(m=>m.sentiment==='negative').length;
+  const news = allMentions.filter(m=>m.type==='news').length;
+  const soc = allMentions.filter(m=>m.type==='social').length;
+  const pct = v => t ? Math.round(v/t*100)+'%' : '-';
 
-  const pct = n => total ? Math.round(n/total*100)+'% of total' : '-';
-  const bar = n => total ? Math.round(n/total*100)+'%' : '0%';
-
-  document.getElementById('sTotal').textContent = total;
-  document.getElementById('sPos').textContent = pos;
-  document.getElementById('sPosP').textContent = pct(pos);
-  document.getElementById('sPosBar').style.width = bar(pos);
-  document.getElementById('sNeu').textContent = neu;
-  document.getElementById('sNeuP').textContent = pct(neu);
-  document.getElementById('sNeuBar').style.width = bar(neu);
-  document.getElementById('sNeg').textContent = neg;
-  document.getElementById('sNegP').textContent = pct(neg);
-  document.getElementById('sNegBar').style.width = bar(neg);
-  document.getElementById('sNews').textContent = newsC;
-  document.getElementById('sAlerts').textContent = alertsC;
-  document.getElementById('sSocial').textContent = socC;
+  document.getElementById('kTotal').textContent = t;
+  document.getElementById('kPos').textContent = p;
+  document.getElementById('kPosP').textContent = pct(p);
+  document.getElementById('kPosBar').style.width = t ? Math.round(p/t*100)+'%' : '0%';
+  document.getElementById('kNeg').textContent = n;
+  document.getElementById('kNegP').textContent = pct(n);
+  document.getElementById('kNegBar').style.width = t ? Math.round(n/t*100)+'%' : '0%';
+  document.getElementById('kNews').textContent = news;
+  document.getElementById('kSocial').textContent = soc;
 }
 
-// ── CHARTS ────────────────────────────────────────────────────────────────────
+// ── Charts ───────────────────────────────────────────────
 function updateCharts() {
-  const pos = allMentions.filter(m=>m.sentiment==='positive').length;
-  const neu = allMentions.filter(m=>m.sentiment==='neutral').length;
-  const neg = allMentions.filter(m=>m.sentiment==='negative').length;
-
-  // Sentiment donut
-  if (sentimentChart) sentimentChart.destroy();
-  sentimentChart = new Chart(document.getElementById('sentimentChart'), {
-    type:'doughnut',
-    data:{ labels:['Positive','Neutral','Negative'], datasets:[{ data:[pos,neu,neg], backgroundColor:['#14B8A6','#F59E0B','#F43F5E'], borderWidth:0, hoverOffset:8 }] },
-    options:{ cutout:'70%', plugins:{ legend:{ position:'bottom', labels:{boxWidth:10,padding:14,font:{size:11}} } } }
-  });
-
-  // Timeline
-  const DAYS = 14;
-  const labels=[], posD=[], neuD=[], negD=[];
-  for (let i=DAYS-1; i>=0; i--) {
-    const d = new Date(); d.setDate(d.getDate()-i);
-    const key = d.toISOString().slice(0,10);
+  const DAYS=14, labels=[], posD=[], neuD=[], negD=[];
+  for (let i=DAYS-1;i>=0;i--) {
+    const d=new Date(); d.setDate(d.getDate()-i);
+    const key=d.toISOString().slice(0,10);
     labels.push(d.toLocaleDateString([],{month:'short',day:'numeric'}));
-    const day = allMentions.filter(m=>m.date&&m.date.startsWith(key));
+    const day=allMentions.filter(m=>m.date&&m.date.startsWith(key));
     posD.push(day.filter(m=>m.sentiment==='positive').length);
     neuD.push(day.filter(m=>m.sentiment==='neutral').length);
     negD.push(day.filter(m=>m.sentiment==='negative').length);
   }
-  if (timelineChart) timelineChart.destroy();
-  timelineChart = new Chart(document.getElementById('timelineChart'), {
-    type:'line',
+  if(timelineChart) timelineChart.destroy();
+  timelineChart = new Chart(document.getElementById('timelineChart'),{
+    type:'bar',
     data:{ labels, datasets:[
-      {label:'Positive',data:posD,borderColor:'#14B8A6',backgroundColor:'rgba(20,184,166,.08)',tension:.4,fill:true,pointRadius:3,pointBackgroundColor:'#14B8A6'},
-      {label:'Neutral',data:neuD,borderColor:'#F59E0B',backgroundColor:'rgba(0,0,0,0)',tension:.4,fill:false,pointRadius:3,pointBackgroundColor:'#F59E0B'},
-      {label:'Negative',data:negD,borderColor:'#F43F5E',backgroundColor:'rgba(0,0,0,0)',tension:.4,fill:false,pointRadius:3,pointBackgroundColor:'#F43F5E'},
+      {label:'Positive',data:posD,backgroundColor:'#10B981',borderRadius:3,barPercentage:.7},
+      {label:'Neutral',data:neuD,backgroundColor:'#F59E0B',borderRadius:3,barPercentage:.7},
+      {label:'Negative',data:negD,backgroundColor:'#EF4444',borderRadius:3,barPercentage:.7},
     ]},
-    options:{ responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false},
-      scales:{ y:{beginAtZero:true,ticks:{stepSize:1,font:{size:11}},grid:{color:'#E2E8F0'}}, x:{grid:{display:false},ticks:{font:{size:10}}} },
-      plugins:{ legend:{position:'top',labels:{boxWidth:10,padding:14,font:{size:11}}} }
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index'},
+      scales:{x:{stacked:true,grid:{display:false},ticks:{font:{size:10,family:'Inter'}}},y:{stacked:true,beginAtZero:true,ticks:{stepSize:1,font:{size:10,family:'Inter'}},grid:{color:'#F1F5F9'}}},
+      plugins:{legend:{position:'top',labels:{boxWidth:8,padding:16,font:{size:11,family:'Inter'}}}}
     }
   });
 
-  // Source distribution
-  const newsC = allMentions.filter(m=>m.type==='news').length;
-  const alertsC = allMentions.filter(m=>m.type==='alerts').length;
-  const socC = allMentions.filter(m=>m.type==='social').length;
-  if (sourceChart) sourceChart.destroy();
-  sourceChart = new Chart(document.getElementById('sourceChart'), {
+  const newsC=allMentions.filter(m=>m.type==='news').length;
+  const alertsC=allMentions.filter(m=>m.type==='alerts').length;
+  const socC=allMentions.filter(m=>m.type==='social').length;
+  if(sourceChart) sourceChart.destroy();
+  sourceChart = new Chart(document.getElementById('sourceChart'),{
     type:'doughnut',
-    data:{ labels:['News','Alerts','Social'], datasets:[{ data:[newsC,alertsC,socC], backgroundColor:['#3B82F6','#22C55E','#E1306C'], borderWidth:0, hoverOffset:8 }] },
-    options:{ cutout:'70%', plugins:{ legend:{ position:'bottom', labels:{boxWidth:10,padding:14,font:{size:11}} } } }
+    data:{labels:['News','Alerts','Social'],datasets:[{data:[newsC,alertsC,socC],backgroundColor:['#6366F1','#10B981','#F59E0B'],borderWidth:0,hoverOffset:6}]},
+    options:{cutout:'72%',plugins:{legend:{position:'bottom',labels:{boxWidth:8,padding:14,font:{size:11,family:'Inter'}}}}}
   });
 }
 
-// ── TOP SOURCES ───────────────────────────────────────────────────────────────
-function updateSources() {
-  const counts = {};
-  allMentions.forEach(m => {
-    const name = m.sourceName || (m.platform === 'facebook' ? 'Facebook' : m.type);
-    if (name && name !== 'Google Alerts') counts[name] = (counts[name]||0)+1;
-  });
-  const top = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,10);
-  if (!top.length) return;
-  document.getElementById('sourcesSection').style.display = '';
-  document.getElementById('sourcesPills').innerHTML = top.map(([name,ct]) =>
-    '<div class="source-pill"><span class="source-pill-name">'+esc(name)+'</span><span class="source-pill-ct">'+ct+'</span></div>'
-  ).join('');
+// ── Social panels ────────────────────────────────────────
+async function loadInstagram() {
+  const panel = document.getElementById('igMini');
+  const sbStatus = document.getElementById('sbIgStatus');
+  try {
+    const ig = await fetch('/api/instagram').then(r=>r.json());
+    if (ig.status==='connected') {
+      panel.innerHTML = `
+        <div class="social-mini-icon ig"><span>&#9635;</span></div>
+        <div class="social-mini-info"><div class="social-mini-name">@${esc(ig.handle)}</div><div class="social-mini-sub">Instagram Business</div></div>
+        <div class="social-mini-stats">
+          <div class="social-mini-stat"><div class="social-mini-stat-val">${fmtNum(ig.followers)}</div><div class="social-mini-stat-lbl">Followers</div></div>
+          <div class="social-mini-stat"><div class="social-mini-stat-val">${ig.engagementRate}%</div><div class="social-mini-stat-lbl">Eng Rate</div></div>
+        </div>`;
+      sbStatus.innerHTML = '<div class="sb-connect"><span class="sb-dot on"></span><span class="sb-connect-label">Instagram</span><span style="font-size:11px;color:#10B981">Live</span></div>';
+    } else {
+      panel.innerHTML = '<div class="social-mini-icon ig"><span>&#9635;</span></div><div class="social-mini-info"><div class="social-mini-name">Instagram</div><div class="social-mini-sub">Not connected</div></div><a class="social-pending-link" href="/auth/meta">Connect &rarr;</a>';
+    }
+  } catch(_) {
+    panel.innerHTML = '<div class="social-mini-icon ig"><span>&#9635;</span></div><div class="social-mini-info"><div class="social-mini-name">Instagram</div><div class="social-mini-sub">Not connected</div></div><a class="social-pending-link" href="/auth/meta">Connect &rarr;</a>';
+  }
 }
 
-// ── FILTERS + FEED ────────────────────────────────────────────────────────────
+async function loadFacebook() {
+  const panel = document.getElementById('fbMini');
+  const sbStatus = document.getElementById('sbFbStatus');
+  try {
+    const fb = await fetch('/api/facebook').then(r=>r.json());
+    if (fb.status==='connected'&&fb.page) {
+      panel.innerHTML = `
+        <div class="social-mini-icon fb"><span>&#9635;</span></div>
+        <div class="social-mini-info"><div class="social-mini-name">${esc(fb.page.name)}</div><div class="social-mini-sub">Facebook Page</div></div>
+        <div class="social-mini-stats">
+          <div class="social-mini-stat"><div class="social-mini-stat-val">${fmtNum(fb.page.fans)}</div><div class="social-mini-stat-lbl">Likes</div></div>
+          <div class="social-mini-stat"><div class="social-mini-stat-val">${fb.mentions?fb.mentions.length:0}</div><div class="social-mini-stat-lbl">Mentions</div></div>
+        </div>`;
+      sbStatus.innerHTML = '<div class="sb-connect"><span class="sb-dot on"></span><span class="sb-connect-label">Facebook</span><span style="font-size:11px;color:#10B981">Live</span></div>';
+    } else {
+      panel.innerHTML = '<div class="social-mini-icon fb"><span>&#9635;</span></div><div class="social-mini-info"><div class="social-mini-name">Facebook</div><div class="social-mini-sub">Not connected</div></div><a class="social-pending-link" href="/auth/meta">Connect &rarr;</a>';
+    }
+  } catch(_) {
+    panel.innerHTML = '<div class="social-mini-icon fb"><span>&#9635;</span></div><div class="social-mini-info"><div class="social-mini-name">Facebook</div><div class="social-mini-sub">Not connected</div></div><a class="social-pending-link" href="/auth/meta">Connect &rarr;</a>';
+  }
+}
+
+// ── Mention feed ─────────────────────────────────────────
 function applyFilters() {
-  const src = document.getElementById('filterSource').value;
-  const sent = document.getElementById('filterSentiment').value;
-  const sort = document.getElementById('filterSort').value;
-  const q = document.getElementById('searchInput').value.toLowerCase().trim();
+  const src=document.getElementById('filterSource').value;
+  const sent=document.getElementById('filterSentiment').value;
+  const sort=document.getElementById('filterSort').value;
+  const q=document.getElementById('searchInput').value.toLowerCase().trim();
 
   let filtered = allMentions.filter(m => {
-    if (src !== 'all' && m.type !== src) return false;
-    if (sent !== 'all' && m.sentiment !== sent) return false;
-    if (q && !((m.title||'').toLowerCase().includes(q) || (m.description||'').toLowerCase().includes(q))) return false;
-    if (activeKeyword) {
-      const kw = activeKeyword.toLowerCase();
-      if (!((m.title||'').toLowerCase().includes(kw) || (m.description||'').toLowerCase().includes(kw))) return false;
-    }
+    if(src!=='all'&&m.type!==src) return false;
+    if(sent!=='all'&&m.sentiment!==sent) return false;
+    if(q&&!((m.title||'').toLowerCase().includes(q)||(m.description||'').toLowerCase().includes(q))) return false;
+    if(activeKeyword) { const kw=activeKeyword.toLowerCase(); if(!((m.title||'').toLowerCase().includes(kw)||(m.description||'').toLowerCase().includes(kw))) return false; }
     return true;
   });
+  if(sort==='sentiment') { const o={negative:0,neutral:1,positive:2}; filtered=filtered.slice().sort((a,b)=>(o[a.sentiment]||1)-(o[b.sentiment]||1)); }
 
-  if (sort === 'sentiment') {
-    const order = {negative:0,neutral:1,positive:2};
-    filtered = filtered.slice().sort((a,b)=>(order[a.sentiment]||1)-(order[b.sentiment]||1));
-  }
-
-  document.getElementById('filterCount').textContent = filtered.length + ' mention' + (filtered.length!==1?'s':'');
-
+  document.getElementById('mentionCount').textContent = filtered.length+' mention'+(filtered.length!==1?'s':'');
   const container = document.getElementById('feedContainer');
-  if (!allMentions.length) { container.innerHTML = '<div class="loading"><div class="spinner"></div><span class="loading-text">Loading...</span></div>'; return; }
-  if (!filtered.length) { container.innerHTML = '<div class="empty">No mentions match your current filters.</div>'; return; }
 
-  container.innerHTML = filtered.map(m => {
-    const icons = {news:'&#128240;', alerts:'&#128276;', website:'&#127760;', social: m.platform==='facebook' ? '&#128218;' : '&#128248;'};
-    const icon = icons[m.type] || '&#128240;';
-    const typeLabel = m.type==='social' ? (m.platform==='facebook'?'FACEBOOK':'INSTAGRAM') : m.type==='website'?'WEBSITE':m.type==='news'?'NEWS':'ALERT';
-    const badgeClass = m.type + (m.platform==='facebook'?' fb':'');
-    return `
-    <div class="mention-card">
-      <div class="m-icon ${badgeClass}">${icon}</div>
-      <div class="m-body">
-        <div class="m-meta">
-          <span class="m-type-badge ${badgeClass}">${typeLabel}</span>
-          <span class="m-source">${esc(m.sourceName||'')}</span>
-          ${m.date ? '<span class="m-dot"></span><span class="m-time">'+timeAgo(m.date)+'</span>' : ''}
-        </div>
-        <div class="m-title">${m.url ? '<a href="'+esc(m.url)+'" target="_blank" rel="noopener">'+esc(m.title)+'</a>' : esc(m.title)}</div>
-        ${m.description ? '<div class="m-desc">'+esc(m.description)+'</div>' : ''}
+  if(!allMentions.length) { container.innerHTML='<div class="loading"><div class="spinner"></div><span class="loading-text">Loading...</span></div>'; return; }
+  if(!filtered.length) { container.innerHTML='<div class="empty-state">No mentions match your filters.</div>'; return; }
+
+  container.innerHTML = '<div class="mention-list">'+filtered.map(m => {
+    const icons={news:'&#128240;',alerts:'&#128276;',social:'&#128172;'};
+    const icon=icons[m.type]||'&#128196;';
+    const typeLabel=m.type==='social'?(m.platform==='facebook'?'Facebook':'Instagram'):m.type==='news'?'News':'Alert';
+    return `<div class="mention-row">
+      <div class="mr-icon ${esc(m.type)}">${icon}</div>
+      <div><span class="mr-type ${esc(m.type)}">${typeLabel}</span></div>
+      <div class="mr-body">
+        <div class="mr-title">${m.url?'<a href="'+esc(m.url)+'" target="_blank" rel="noopener">'+esc(m.title)+'</a>':esc(m.title)}</div>
+        <div class="mr-meta"><span>${esc(m.sourceName||'')}</span>${m.date?'<span class="mr-meta-dot"></span><span>'+timeAgo(m.date)+' ago</span>':''}</div>
       </div>
-      <div class="m-right">
-        <div class="m-badge ${esc(m.sentiment)}">${m.sentiment}</div>
-        ${m.engagement ? '<div class="m-engagement">'+fmtNum(m.engagement)+' engagements</div>' : ''}
-      </div>
+      <div class="mr-sentiment"><span class="mr-badge ${esc(m.sentiment)}">${m.sentiment}</span></div>
+      <div class="mr-date">${m.date?new Date(m.date).toLocaleDateString([],{month:'short',day:'numeric'}):''}</div>
     </div>`;
-  }).join('');
+  }).join('')+'</div>';
 }
 
-// ── EXPORT CSV ────────────────────────────────────────────────────────────────
+// ── Export ────────────────────────────────────────────────
 function exportCsv() {
-  const headers = ['Date','Type','Source','Title','Sentiment','URL'];
-  const rows = allMentions.map(m => [
-    m.date ? new Date(m.date).toISOString() : '',
-    m.type || '', m.sourceName || '', '"'+(m.title||'').replace(/"/g,'""')+'"',
-    m.sentiment || '', m.url || ''
-  ]);
-  const csv = [headers.join(','), ...rows.map(r=>r.join(','))].join('\n');
-  const blob = new Blob([csv], {type:'text/csv'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'sri-labs-mentions-'+new Date().toISOString().slice(0,10)+'.csv';
+  const h=['Date','Type','Source','Title','Sentiment','URL'];
+  const rows=allMentions.map(m=>[m.date?new Date(m.date).toISOString():'',m.type||'',m.sourceName||'','"'+(m.title||'').replace(/"/g,'""')+'"',m.sentiment||'',m.url||'']);
+  const csv=[h.join(','),...rows.map(r=>r.join(','))].join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download='sri-labs-mentions-'+new Date().toISOString().slice(0,10)+'.csv';
   a.click();
 }
 
-// ── INSTAGRAM PANEL ───────────────────────────────────────────────────────────
-async function loadInstagram() {
-  const panel = document.getElementById('igPanel');
-  try {
-    const ig = await fetch('/api/instagram').then(r=>r.json());
-    if (ig.status === 'connected') {
-      const posts = (ig.recentMedia||[]).slice(0,6);
-      panel.innerHTML = `
-        <div class="social-header ig">
-          <span style="font-size:22px">&#128248;</span>
-          <span class="social-handle">@${esc(ig.handle)}</span>
-          <span class="social-badge">CONNECTED</span>
-        </div>
-        <div class="social-metrics">
-          <div class="social-metric"><div class="social-metric-val ig-c">${fmtNum(ig.followers)}</div><div class="social-metric-lbl">Followers</div></div>
-          <div class="social-metric"><div class="social-metric-val ig-c">${fmtNum(ig.following)}</div><div class="social-metric-lbl">Following</div></div>
-          <div class="social-metric"><div class="social-metric-val ig-c">${ig.engagementRate}%</div><div class="social-metric-lbl">Eng. Rate</div></div>
-          <div class="social-metric"><div class="social-metric-val ig-c">${fmtNum(ig.mediaCount)}</div><div class="social-metric-lbl">Posts</div></div>
-        </div>
-        ${posts.length ? `<div class="social-posts"><div class="social-posts-title">Recent Posts</div><div class="ig-grid">${posts.map(p => {
-          const img = p.media_url || p.thumbnail_url;
-          return '<a class="ig-post" href="'+(p.permalink||'#')+'" target="_blank" rel="noopener">'
-            + (img ? '<img src="'+esc(img)+'" alt="" loading="lazy" />' : '<div class="ig-post-placeholder">&#128248;</div>')
-            + '<div class="ig-post-overlay"><span class="ig-post-stat">&#10084; '+fmtNum(p.like_count)+'</span><span class="ig-post-stat">&#128172; '+fmtNum(p.comments_count)+'</span></div></a>';
-        }).join('')}</div></div>` : ''}`;
-    } else if (ig.tokenExpired) {
-      panel.innerHTML = '<div class="social-pending"><div class="social-pending-icon">&#128248;</div><div><h3>Instagram - Session Expired</h3><p>Your token has expired (60 days). Reconnect to resume tracking.</p></div><a class="btn-connect" href="/auth/meta">Reconnect</a></div>';
-    } else {
-      panel.innerHTML = '<div class="social-pending"><div class="social-pending-icon">&#128248;</div><div><h3>Instagram @sri_labs_</h3><p>Connect to track followers, engagement, and mentions.</p></div><a class="btn-connect" href="/auth/meta">Connect Instagram</a></div>';
-    }
-  } catch(_) {
-    panel.innerHTML = '<div class="social-pending"><div class="social-pending-icon">&#128248;</div><div><h3>Instagram</h3><p>Connect to start monitoring.</p></div><a class="btn-connect" href="/auth/meta">Connect</a></div>';
+// ── OAuth redirect handling ──────────────────────────────
+(function(){
+  const p=new URLSearchParams(location.search);
+  if(p.get('meta_connected')||p.get('ig_connected')){
+    const t=document.createElement('div');
+    t.style.cssText='position:fixed;top:16px;left:50%;transform:translateX(-50%);background:#10B981;color:#fff;padding:10px 24px;border-radius:8px;font-weight:600;font-size:13px;z-index:9999;font-family:Inter,sans-serif';
+    t.textContent='Social accounts connected';
+    document.body.appendChild(t); setTimeout(()=>t.remove(),3000);
+    history.replaceState({},'','/');
   }
-}
-
-// ── FACEBOOK PANEL ────────────────────────────────────────────────────────────
-async function loadFacebook() {
-  const panel = document.getElementById('fbPanel');
-  try {
-    const fb = await fetch('/api/facebook').then(r=>r.json());
-    if (fb.status === 'connected' && fb.page) {
-      const posts = (fb.posts||[]).slice(0,4);
-      panel.innerHTML = `
-        <div class="social-header fb">
-          <span style="font-size:22px">&#128218;</span>
-          <span class="social-handle">${esc(fb.page.name)}</span>
-          <span class="social-badge">CONNECTED</span>
-        </div>
-        <div class="social-metrics">
-          <div class="social-metric"><div class="social-metric-val fb-c">${fmtNum(fb.page.fans)}</div><div class="social-metric-lbl">Page Likes</div></div>
-          <div class="social-metric"><div class="social-metric-val fb-c">${fmtNum(fb.page.followers)}</div><div class="social-metric-lbl">Followers</div></div>
-          <div class="social-metric"><div class="social-metric-val fb-c">${fb.posts?fb.posts.length:0}</div><div class="social-metric-lbl">Recent Posts</div></div>
-          <div class="social-metric"><div class="social-metric-val fb-c">${fb.mentions?fb.mentions.length:0}</div><div class="social-metric-lbl">Mentions</div></div>
-        </div>
-        ${posts.length ? `<div class="social-posts"><div class="social-posts-title">Recent Page Posts</div><div class="fb-post-list">${posts.map(p =>
-          '<div class="fb-post-item"><div class="fb-post-msg">'+(p.url?'<a href="'+esc(p.url)+'" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">':'')+esc(p.title)+(p.url?'</a>':'')+'</div><div class="fb-post-eng">'+fmtNum(p.engagement)+' eng</div><div class="fb-post-date">'+timeAgo(p.date)+'</div></div>'
-        ).join('')}</div></div>` : ''}`;
-    } else {
-      panel.innerHTML = '<div class="social-pending"><div class="social-pending-icon">&#128218;</div><div><h3>Facebook Page</h3><p>Connect to track page likes, posts, and mentions.</p></div><a class="btn-connect" href="/auth/meta">Connect Facebook</a></div>';
-    }
-  } catch(_) {
-    panel.innerHTML = '<div class="social-pending"><div class="social-pending-icon">&#128218;</div><div><h3>Facebook Page</h3><p>Connect to start monitoring.</p></div><a class="btn-connect" href="/auth/meta">Connect</a></div>';
-  }
-}
-
-// ── OAUTH REDIRECT HANDLING ───────────────────────────────────────────────────
-(function handleOAuthRedirect() {
-  const params = new URLSearchParams(window.location.search);
-  const showToast = (msg, color) => {
-    const t = document.createElement('div');
-    t.style.cssText = 'position:fixed;top:70px;right:24px;background:'+color+';color:#fff;padding:12px 20px;border-radius:10px;font-weight:700;font-size:14px;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.2)';
-    t.textContent = msg;
-    document.body.appendChild(t);
-    setTimeout(()=>t.remove(), 4000);
-  };
-  if (params.get('meta_connected') || params.get('ig_connected')) {
-    showToast('Social accounts connected!', '#14B8A6');
-    window.history.replaceState({}, '', '/');
-  }
-  if (params.get('meta_error') || params.get('ig_error')) {
-    showToast('Connection error: ' + decodeURIComponent(params.get('meta_error')||params.get('ig_error')||''), '#F43F5E');
-    window.history.replaceState({}, '', '/');
+  if(p.get('meta_error')||p.get('ig_error')){
+    const t=document.createElement('div');
+    t.style.cssText='position:fixed;top:16px;left:50%;transform:translateX(-50%);background:#EF4444;color:#fff;padding:10px 24px;border-radius:8px;font-weight:600;font-size:13px;z-index:9999;font-family:Inter,sans-serif';
+    t.textContent='Error: '+decodeURIComponent(p.get('meta_error')||p.get('ig_error')||'');
+    document.body.appendChild(t); setTimeout(()=>t.remove(),5000);
+    history.replaceState({},'','/');
   }
 })();
 
-// ── AUTO-REFRESH ──────────────────────────────────────────────────────────────
-setInterval(loadAll, 10 * 60 * 1000);
-setInterval(() => { loadInstagram(); loadFacebook(); }, 15 * 60 * 1000);
+// ── Auto-refresh ─────────────────────────────────────────
+setInterval(loadAll, 10*60*1000);
+setInterval(()=>{loadInstagram();loadFacebook();}, 15*60*1000);
 
-// ── BOOT ──────────────────────────────────────────────────────────────────────
+// ── Boot ─────────────────────────────────────────────────
 loadConfig();
 loadInstagram();
 loadFacebook();

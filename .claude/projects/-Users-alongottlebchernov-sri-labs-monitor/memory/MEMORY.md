@@ -1,1 +1,2 @@
 - [Brand mentions only](feedback_brand_mentions.md) — Dashboard shows external mentions, never the brand's own content
+- [Internal team tool](project_internal_team.md) — Dashboard is for internal team, should look like professional brand monitoring SaaS
