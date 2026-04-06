@@ -298,8 +298,8 @@ function sources(nw,al,rd,gn,yt,tt,ig,fb){
     {n:'Reddit',c:(rd||[]).length,cl:'#F97316',on:(rd||[]).length>0},
     {n:'YouTube',c:(yt||[]).length,cl:'#DC2626',on:(yt||[]).length>0},
     {n:'TikTok',c:(tt||[]).length,cl:'#000000',on:(tt||[]).length>0},
-    {n:'Instagram',cl:'#EC4899',on:false,lk:true},
-    {n:'Facebook',cl:'#3B82F6',on:false,lk:true},
+    {n:'Instagram',cl:'#EC4899',on:false},
+    {n:'Facebook',cl:'#3B82F6',on:false},
   ];
   const igIdx=s.findIndex(x=>x.n==='Instagram'),fbIdx=s.findIndex(x=>x.n==='Facebook');
   fetch('/api/instagram').then(r=>r.json()).then(d=>{if(d.status==='connected'){s[igIdx].on=true;s[igIdx].sub='@'+d.handle;draw()}}).catch(()=>{});
@@ -315,7 +315,6 @@ function sources(nw,al,rd,gn,yt,tt,ig,fb){
       +'<div class="src-d" style="background:'+(x.on?x.cl:'#D4D4D8')+(x.on?';box-shadow:0 0 4px '+x.cl:'')+'"></div>'
       +'<span class="src-n">'+esc(x.n)+(x.sub?' <span style="color:var(--t3)">'+esc(x.sub)+'</span>':'')+'</span>'
       +(x.c!=null?'<span class="src-c">'+x.c+'</span>':'')
-      +(!x.on&&x.lk?'<a href="/auth/setup">Connect</a>':'')
       +'</div>'}).join('')}
   draw();
 }
