@@ -92,8 +92,9 @@ function cached(key, ttlMs, fetchFn) {
 function analyzeSentimentFull(text) {
   const result = sentiment.analyze(text || '');
   const score = Math.round(result.comparative * 100) / 100;
+  // Wider neutral band — beauty/product articles often contain cautionary language
   return {
-    sentiment: score > 0.05 ? 'positive' : score < -0.05 ? 'negative' : 'neutral',
+    sentiment: score > 0.1 ? 'positive' : score < -0.15 ? 'negative' : 'neutral',
     sentimentScore: score,
   };
 }
@@ -680,10 +681,12 @@ app.get('/api/google', async (req, res) => {
         }
       }
 
-      // Filter out false positives (Singapore skin institute, generic research, Sri Lanka)
+      // Filter out false positives
       const EXCLUDE = ['singapore', 'sri lanka', 'sri lankan', 'colombo', 'novotech cro',
         'dermatology research', 'clinical trial', 'autoimmune', 'psoriasis', 'eczema',
-        'dupilumab', 'atopic dermatitis'];
+        'dupilumab', 'atopic dermatitis', 'mountain hardwear', 'ukclimbing', 'ukcl',
+        'waterproof fabric', 'plasmic jacket', 'rain jacket', 'stanford research',
+        'sri international', 'menlo park nonprofit', 'invented siri'];
       const filtered = results.filter(r => {
         const text = (r.title + ' ' + r.description).toLowerCase();
         // If it matched a specific product keyword, always keep it

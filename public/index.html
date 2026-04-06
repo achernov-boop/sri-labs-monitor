@@ -269,8 +269,16 @@ async function loadAll(){
 
     // Merge fresh + history, deduplicate
     const seen=new Set();
+    const cutoff=activeDays?new Date(Date.now()-activeDays*86400000):null;
     allMentions=[...(news||[]),...(alerts||[]),...(reddit||[]),...(bing||[]),...(gnews||[]),...(ytData||[]),...(igM||[]),...fbI,...history]
-      .filter(m=>{if(!m.title)return false;const k=(m.url||m.title.slice(0,80)).toLowerCase();if(seen.has(k))return false;seen.add(k);return true})
+      .filter(m=>{
+        if(!m.title)return false;
+        const k=(m.url||m.title.slice(0,80)).toLowerCase();
+        if(seen.has(k))return false;seen.add(k);
+        // Date range filter
+        if(cutoff&&m.date){const d=new Date(m.date);if(!isNaN(d)&&d<cutoff)return false}
+        return true;
+      })
       .sort((a,b)=>new Date(b.date)-new Date(a.date));
 
     updateKpis();updateCharts();updateSources(news,alerts,reddit,gnews,igM,fb);applyFilters();
@@ -353,7 +361,7 @@ function applyFilters(){
     const ic={news:'&#9889;',alerts:'&#9883;',reddit:'&#9673;',youtube:'&#9654;',social:'&#10022;'};
     const tl=m.type==='youtube'?'YouTube':m.type==='reddit'?'Reddit':m.type==='social'?(m.platform==='facebook'?'Facebook':'Instagram'):m.type==='news'?'News':'Alert';
     const sc=m.sentimentScore!=null?m.sentimentScore:0;
-    const scCls=sc>0.05?'p':sc<-0.05?'n':'u';
+    const scCls=sc>0.1?'p':sc<-0.15?'n':'u';
     const scTxt=sc>0?('+'+sc.toFixed(2)):sc.toFixed(2);
     return`<div class="mr">
       <div class="mr-i ${esc(m.type)}">${ic[m.type]||'&#9679;'}</div>
