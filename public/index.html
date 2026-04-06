@@ -61,7 +61,7 @@
     .rng.on{background:var(--card);color:var(--t0);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.06)}
 
     /* ═══ KPI ═══ */
-    .kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+    .kpis{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
     .k{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px 16px 14px;position:relative;transition:.15s}
     .k:hover{box-shadow:0 2px 8px rgba(0,0,0,.04);border-color:var(--ring)}
     .k-top{display:flex;align-items:center;gap:6px;margin-bottom:8px}
@@ -115,11 +115,11 @@
     .mr:hover{background:var(--hover)}
     .mi{width:28px;height:28px;border-radius:7px;display:grid;place-items:center;font-size:12px}
     .mi.news{background:#EFF6FF;color:var(--blue)}.mi.alerts{background:var(--g-s);color:var(--g)}
-    .mi.reddit{background:#FFF7ED;color:var(--orange)}.mi.youtube{background:var(--r-s);color:var(--red)}
+    .mi.reddit{background:#FFF7ED;color:var(--orange)}.mi.youtube{background:var(--r-s);color:var(--red)}.mi.tiktok{background:#F5F5F5;color:#000}
     .mi.social{background:#F5F3FF;color:#7C3AED}
     .mt{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;padding:2px 5px;border-radius:3px;text-align:center;white-space:nowrap}
     .mt.news{background:#EFF6FF;color:#2563EB}.mt.alerts{background:var(--g-s);color:var(--g)}
-    .mt.reddit{background:#FFF7ED;color:#EA580C}.mt.youtube{background:var(--r-s);color:var(--red)}
+    .mt.reddit{background:#FFF7ED;color:#EA580C}.mt.youtube{background:var(--r-s);color:var(--red)}.mt.tiktok{background:#F5F5F5;color:#000}
     .mt.social{background:#F5F3FF;color:#7C3AED}
     .mb{padding:0 10px;min-width:0}
     .mb-t{font-size:12.5px;font-weight:500;color:var(--t0);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.35}
@@ -187,6 +187,7 @@
     <div class="k a a3"><div class="k-top"><div class="k-dot" style="background:var(--blue)"></div><div class="k-label">News</div></div><div class="k-val" id="kNw" style="color:var(--blue)">-</div><div class="k-foot"><span class="k-sub">Google News</span></div></div>
     <div class="k a a4"><div class="k-top"><div class="k-dot" style="background:var(--orange)"></div><div class="k-label">Reddit</div></div><div class="k-val" id="kR" style="color:var(--orange)">-</div><div class="k-foot"><span class="k-sub">Discussions</span></div></div>
     <div class="k a a5"><div class="k-top"><div class="k-dot" style="background:var(--red)"></div><div class="k-label">YouTube</div></div><div class="k-val" id="kY" style="color:var(--red)">-</div><div class="k-foot"><span class="k-sub">Videos</span></div></div>
+    <div class="k a" style="animation-delay:.18s"><div class="k-top"><div class="k-dot" style="background:#000"></div><div class="k-label">TikTok</div></div><div class="k-val" id="kTt">-</div><div class="k-foot"><span class="k-sub">Videos</span></div></div>
   </div>
 
   <!-- Charts -->
@@ -207,7 +208,7 @@
   <div id="feed-section">
     <div class="tbl">
       <div class="tbar">
-        <select class="f" id="fS" onchange="render()"><option value="all">All Sources</option><option value="news">News</option><option value="alerts">Alerts</option><option value="reddit">Reddit</option><option value="youtube">YouTube</option><option value="social">Social</option></select>
+        <select class="f" id="fS" onchange="render()"><option value="all">All Sources</option><option value="news">News</option><option value="alerts">Alerts</option><option value="reddit">Reddit</option><option value="youtube">YouTube</option><option value="tiktok">TikTok</option><option value="social">Social</option></select>
         <select class="f" id="fT" onchange="render()"><option value="all">All Sentiment</option><option value="positive">Positive</option><option value="neutral">Neutral</option><option value="negative">Negative</option></select>
         <select class="f" id="fO" onchange="render()"><option value="date">Newest</option><option value="sentiment">Sentiment</option></select>
         <input class="f f-s" type="text" id="fQ" placeholder="Search..." oninput="render()" />
@@ -242,20 +243,21 @@ async function loadAll(){
   const b=document.getElementById('rb');b.disabled=true;b.textContent='...';
   document.getElementById('feed').innerHTML='<div class="ld"><div class="sp"></div><span class="ld-t">Scanning...</span></div>';
   try{
-    const[nw,al,rd,bi,gn,yt,ig,fb]=await Promise.all([
+    const[nw,al,rd,bi,gn,yt,tt,ig,fb]=await Promise.all([
       fetch('/api/news').then(r=>r.json()).catch(()=>[]),fetch('/api/alerts').then(r=>r.json()).catch(()=>[]),
       fetch('/api/reddit').then(r=>r.json()).catch(()=>[]),fetch('/api/bing').then(r=>r.json()).catch(()=>[]),
       fetch('/api/google').then(r=>r.json()).catch(()=>[]),fetch('/api/youtube').then(r=>r.json()).catch(()=>[]),
+      fetch('/api/tiktok').then(r=>r.json()).catch(()=>[]),
       fetch('/api/instagram/mentions').then(r=>r.json()).catch(()=>[]),fetch('/api/facebook').then(r=>r.json()).catch(()=>({status:'pending'})),
     ]);
     const h=await(await fetch(aD?'/api/history?days='+aD:'/api/history')).json().catch(()=>[]);
     const fbI=[...((fb.posts||[]).map(p=>({...p,type:'social',platform:'facebook'}))),...((fb.mentions||[]).map(m=>({...m,type:'social',platform:'facebook'})))];
     const cut=aD?new Date(Date.now()-aD*864e5):null;
     const seen=new Set();
-    D=[...(nw||[]),...(al||[]),...(rd||[]),...(bi||[]),...(gn||[]),...(yt||[]),...(ig||[]),...fbI,...h]
+    D=[...(nw||[]),...(al||[]),...(rd||[]),...(bi||[]),...(gn||[]),...(yt||[]),...(tt||[]),...(ig||[]),...fbI,...h]
       .filter(m=>{if(!m.title)return false;const k=(m.url||m.title.slice(0,80)).toLowerCase();if(seen.has(k))return false;seen.add(k);if(cut){const d=new Date(m.date);if(isNaN(d)||d<cut)return false}return true})
       .sort((a,b)=>new Date(b.date)-new Date(a.date));
-    kpis();charts();sources(nw,al,rd,gn,yt,ig,fb);render();
+    kpis();charts();sources(nw,al,rd,gn,yt,tt,ig,fb);render();
     document.getElementById('ts').textContent=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
   }catch(e){console.error(e);document.getElementById('feed').innerHTML='<div class="empty">Error loading data.</div>'}
   finally{b.disabled=false;b.textContent='Refresh'}
@@ -263,13 +265,13 @@ async function loadAll(){
 
 function kpis(){
   const t=D.length,p=D.filter(m=>m.sentiment==='positive').length,n=D.filter(m=>m.sentiment==='negative').length;
-  const nw=D.filter(m=>m.type==='news').length,rd=D.filter(m=>m.type==='reddit').length,yt=D.filter(m=>m.type==='youtube').length;
+  const nw=D.filter(m=>m.type==='news').length,rd=D.filter(m=>m.type==='reddit').length,yt=D.filter(m=>m.type==='youtube').length,tt=D.filter(m=>m.type==='tiktok').length;
   const pct=v=>t?Math.round(v/t*100)+'%':'-';
   document.getElementById('kT').textContent=t;
   document.getElementById('kTs').textContent=(aD?aD+'d':'all time');
   document.getElementById('kP').textContent=p;document.getElementById('kPp').textContent=pct(p);document.getElementById('kPb').style.width=t?(p/t*100)+'%':'0%';
   document.getElementById('kN').textContent=n;document.getElementById('kNp').textContent=pct(n);document.getElementById('kNb').style.width=t?(n/t*100)+'%':'0%';
-  document.getElementById('kNw').textContent=nw;document.getElementById('kR').textContent=rd;document.getElementById('kY').textContent=yt;
+  document.getElementById('kNw').textContent=nw;document.getElementById('kR').textContent=rd;document.getElementById('kY').textContent=yt;document.getElementById('kTt').textContent=tt;
 }
 
 function charts(){
@@ -287,20 +289,21 @@ function charts(){
   cS=new Chart(document.getElementById('cSent'),{type:'doughnut',data:{labels:['Positive','Neutral','Negative'],datasets:[{data:[p,u,n],backgroundColor:['#10B981','#F59E0B','#EF4444'],borderWidth:0,hoverOffset:4,borderRadius:2}]},options:{cutout:'76%',plugins:{legend:{position:'bottom',labels:{boxWidth:6,padding:12,usePointStyle:true,pointStyle:'circle'}}}}});
 }
 
-function sources(nw,al,rd,gn,yt,ig,fb){
+function sources(nw,al,rd,gn,yt,tt,ig,fb){
   const el=document.getElementById('srcs');
   const s=[
     {n:'Google News',c:(gn||[]).length,cl:'#3B82F6',on:(gn||[]).length>0},
     {n:'Alerts',c:(al||[]).length,cl:'#10B981',on:true},
     {n:'Reddit',c:(rd||[]).length,cl:'#F97316',on:(rd||[]).length>0},
     {n:'YouTube',c:(yt||[]).length,cl:'#DC2626',on:(yt||[]).length>0},
+    {n:'TikTok',c:(tt||[]).length,cl:'#000000',on:(tt||[]).length>0},
     {n:'Instagram',cl:'#EC4899',on:false,lk:true},
     {n:'Facebook',cl:'#3B82F6',on:false,lk:true},
   ];
   fetch('/api/instagram').then(r=>r.json()).then(d=>{if(d.status==='connected'){s[4].on=true;s[4].sub='@'+d.handle;draw()}}).catch(()=>{});
   fetch('/api/facebook').then(r=>r.json()).then(d=>{if(d.status==='connected'){s[5].on=true;s[5].sub=d.page?.name;draw()}}).catch(()=>{});
   // Map source names to filter values
-  const typeMap={'Google News':'news','News API':'news','Alerts':'alerts','Reddit':'reddit','YouTube':'youtube','Instagram':'social','Facebook':'social'};
+  const typeMap={'Google News':'news','News API':'news','Alerts':'alerts','Reddit':'reddit','YouTube':'youtube','TikTok':'tiktok','Instagram':'social','Facebook':'social'};
   function draw(){el.innerHTML=s.map(x=>{
     const fv=typeMap[x.n]||'all';
     const clickable=x.on&&x.c>0;
@@ -327,8 +330,8 @@ function render(){
   if(!D.length){el.innerHTML='<div class="ld"><div class="sp"></div><span class="ld-t">Loading...</span></div>';return}
   if(!f.length){el.innerHTML='<div class="empty">No mentions match filters.</div>';return}
   el.innerHTML=f.map(m=>{
-    const ic={news:'&#9889;',alerts:'&#9883;',reddit:'&#9673;',youtube:'&#9654;',social:'&#10022;'};
-    const tl=m.type==='youtube'?'YouTube':m.type==='reddit'?'Reddit':m.type==='social'?(m.platform==='facebook'?'Facebook':'Instagram'):m.type==='news'?'News':'Alert';
+    const ic={news:'&#9889;',alerts:'&#9883;',reddit:'&#9673;',youtube:'&#9654;',tiktok:'&#9836;',social:'&#10022;'};
+    const tl=m.type==='tiktok'?'TikTok':m.type==='youtube'?'YouTube':m.type==='reddit'?'Reddit':m.type==='social'?(m.platform==='facebook'?'Facebook':'Instagram'):m.type==='news'?'News':'Alert';
     const sc=m.sentimentScore||0;const cls=sc>0.1?'p':sc<-0.15?'n':'u';
     return'<div class="mr"><div class="mi '+esc(m.type)+'">'+(ic[m.type]||'&#9679;')+'</div><div><span class="mt '+esc(m.type)+'">'+tl+'</span></div><div class="mb"><div class="mb-t">'+(m.url?'<a href="'+esc(m.url)+'" target="_blank" rel="noopener">'+esc(m.title)+'</a>':esc(m.title))+'</div><div class="mb-m"><span>'+esc(m.sourceName||'')+'</span>'+(m.date?'<span class="mb-sep"></span><span>'+ago(m.date)+'</span>':'')+'</div></div><div class="ms"><span class="ms-b '+esc(m.sentiment)+'">'+m.sentiment+'</span><span class="ms-s '+cls+'">'+(sc>0?'+':'')+sc.toFixed(2)+'</span></div><div class="md">'+(m.date?new Date(m.date).toLocaleDateString([],{month:'short',day:'numeric'}):'')+'</div></div>'
   }).join('');

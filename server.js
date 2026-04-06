@@ -25,12 +25,16 @@ const CONFIG = {
 
   KEYWORDS: [
     'SRI Labs',
-    'DryQ',
-    'StyleQ',
-    'CurlQ',
+    'SRI DryQ',
+    'DryQ hair dryer',
+    'Dry Q hair dryer',
+    'StyleQ flat iron',
+    'SRI StyleQ',
+    'CurlQ curling iron',
+    'SRI CurlQ',
+    'StyleWrap Pro',
     'RenewGlow',
     'KeeWee Shampoo',
-    'StyleWrap Pro',
     'Skin Research Institute skincare',
     'skinresearchinstitute.com',
   ],
@@ -820,6 +824,73 @@ app.get('/api/youtube', async (req, res) => {
     res.json(enrichAndPersist(items));
   } catch (err) {
     console.error('[YouTube] Error:', err.message);
+    res.json([]);
+  }
+});
+
+// ── API: TIKTOK (via Google index) ─────────────────────────────────────────────
+app.get('/api/tiktok', async (req, res) => {
+  try {
+    const items = await cached('tiktok', 30 * 60 * 1000, async () => {
+      const parser = new xml2js.Parser({ explicitArray: false, trim: true });
+      const results = [];
+      // Search for brand terms on TikTok via Google
+      const tiktokKeywords = ['SRI Labs', 'DryQ', 'StyleQ', 'CurlQ', 'StyleWrap Pro', 'Skin Research Institute'];
+
+      for (const kw of tiktokKeywords) {
+        try {
+          const url = `https://news.google.com/rss/search?q=${encodeURIComponent(kw + ' site:tiktok.com')}&hl=en-US&gl=US&ceid=US:en`;
+          const { data } = await axios.get(url, {
+            timeout: 8000,
+            headers: { 'User-Agent': 'Mozilla/5.0 (compatible; SRILabsMonitor/2.0)' },
+          });
+          const result = await parser.parseStringPromise(data);
+          const entries = result?.rss?.channel?.item;
+          if (!entries) continue;
+          const list = Array.isArray(entries) ? entries : [entries];
+
+          list.forEach((item, i) => {
+            const title = stripHtml(item.title || '');
+            const link = item.link || '';
+            const date = item.pubDate || '';
+
+            if (title) {
+              results.push({
+                id:          `tiktok-${kw.replace(/\s/g,'')}-${i}-${Date.now()}`,
+                type:        'tiktok',
+                sourceName:  'TikTok',
+                title,
+                description: '',
+                url:         link,
+                date:        date ? new Date(date).toISOString() : new Date().toISOString(),
+                ...analyzeSentimentFull(title),
+                matchedKeyword: kw,
+              });
+            }
+          });
+        } catch (e) {
+          console.warn(`[TikTok] Error for "${kw}":`, e.message);
+        }
+      }
+
+      // Brand verification + deduplicate
+      const TT_BRAND = ['sri labs','srilabs','dryq','dry q','dry-q','styleq','stylewrap',
+        'style wrap','curlq','curl q','renewglow','keewee','skin research institute','skinresearch'];
+      const seen = new Set();
+      return results.filter(r => {
+        const key = r.title.slice(0, 60).toLowerCase();
+        if (seen.has(key)) return false;
+        seen.add(key);
+        const text = r.title.toLowerCase();
+        if (!TT_BRAND.some(k => text.includes(k))) return false;
+        return true;
+      });
+    });
+
+    console.log(`[TikTok] ${items.length} videos`);
+    res.json(enrichAndPersist(items));
+  } catch (err) {
+    console.error('[TikTok] Error:', err.message);
     res.json([]);
   }
 });
