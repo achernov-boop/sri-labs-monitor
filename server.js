@@ -1354,7 +1354,7 @@ app.get('/api/facebook', async (req, res) => {
             sourceName:  r.reviewer?.name || 'Facebook Review',
             title:       (r.review_text || '').slice(0, 120),
             description: r.review_text || '',
-            url:         '',
+            url:         `https://www.facebook.com/${pageId}/reviews`,
             date:        r.created_time || new Date().toISOString(),
             sentiment:   analyzeSentiment(r.review_text || ''),
             rating:      r.rating,
