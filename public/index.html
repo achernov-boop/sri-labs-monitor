@@ -242,7 +242,7 @@ async function loadAll(){
   const b=document.getElementById('rb');b.disabled=true;b.textContent='...';
   document.getElementById('feed').innerHTML='<div class="ld"><div class="sp"></div><span class="ld-t">Scanning...</span></div>';
   try{
-    const[nw,al,rd,bi,gn,yt,tt,ig,fb]=await Promise.all([
+    const[nw,al,bi,gn,yt,tt,ig,fb]=await Promise.all([
       fetch('/api/news').then(r=>r.json()).catch(()=>[]),fetch('/api/alerts').then(r=>r.json()).catch(()=>[]),
       fetch('/api/bing').then(r=>r.json()).catch(()=>[]),
       fetch('/api/google').then(r=>r.json()).catch(()=>[]),fetch('/api/youtube').then(r=>r.json()).catch(()=>[]),
@@ -254,10 +254,10 @@ async function loadAll(){
     const fbI=(fb.mentions||[]).map(m=>({...m,type:'social',platform:'facebook'}));
     const cut=aD?new Date(Date.now()-aD*864e5):null;
     const seen=new Set();
-    D=[...(nw||[]),...(al||[]),...(rd||[]),...(bi||[]),...(gn||[]),...(yt||[]),...(tt||[]),...(ig||[]),...fbI,...h]
+    D=[...(nw||[]),...(al||[]),...(bi||[]),...(gn||[]),...(yt||[]),...(tt||[]),...(ig||[]),...fbI,...h]
       .filter(m=>{if(!m.title)return false;const k=(m.url||m.title.slice(0,80)).toLowerCase();if(seen.has(k))return false;seen.add(k);if(cut){const d=new Date(m.date);if(isNaN(d)||d<cut)return false;if((m.type==='youtube'||m.type==='tiktok')&&m.relativeDate&&!m.relativeDate.match(/^\d+\s*(hour|minute|second|day)/i))return false}return true})
       .sort((a,b)=>new Date(b.date)-new Date(a.date));
-    kpis();charts();sources(nw,al,rd,gn,yt,tt,ig,fb);render();
+    kpis();charts();sources(nw,al,gn,yt,tt,ig,fb);render();
     document.getElementById('ts').textContent=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
   }catch(e){console.error(e);document.getElementById('feed').innerHTML='<div class="empty">Error loading data.</div>'}
   finally{b.disabled=false;b.textContent='Refresh'}
@@ -289,7 +289,7 @@ function charts(){
   cS=new Chart(document.getElementById('cSent'),{type:'doughnut',data:{labels:['Positive','Neutral','Negative'],datasets:[{data:[p,u,n],backgroundColor:['#10B981','#F59E0B','#EF4444'],borderWidth:0,hoverOffset:4,borderRadius:2}]},options:{cutout:'76%',plugins:{legend:{position:'bottom',labels:{boxWidth:6,padding:12,usePointStyle:true,pointStyle:'circle'}}}}});
 }
 
-function sources(nw,al,rd,gn,yt,tt,ig,fb){
+function sources(nw,al,gn,yt,tt,ig,fb){
   const el=document.getElementById('srcs');
   const s=[
     {n:'Google News',c:(gn||[]).length,cl:'#3B82F6',on:(gn||[]).length>0},
