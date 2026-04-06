@@ -190,23 +190,32 @@ function clearTokens() {
   try { fs.unlinkSync(CONFIG.TOKEN_FILE); } catch (_) {}
 }
 
-// Also support legacy instagram_token.json if meta_tokens.json doesn't exist
+// Load tokens: file first, then env vars as fallback (for cloud deployment)
 function loadTokensCompat() {
   let tokens = loadTokens();
   if (tokens) return tokens;
+  // Try legacy file
   try {
     const legacy = path.join(__dirname, 'instagram_token.json');
     if (fs.existsSync(legacy)) {
       const data = JSON.parse(fs.readFileSync(legacy, 'utf8'));
       return {
-        accessToken:  data.accessToken,
-        igAccountId:  data.igAccountId,
-        pageId:       null,
-        pageToken:    data.accessToken,
-        connectedAt:  data.connectedAt,
+        accessToken: data.accessToken, igAccountId: data.igAccountId,
+        pageId: null, pageToken: data.accessToken, connectedAt: data.connectedAt,
       };
     }
   } catch (_) {}
+  // Fall back to env vars (for Railway/Render/AWS where no file exists)
+  if (process.env.META_PAGE_TOKEN) {
+    return {
+      accessToken: process.env.META_PAGE_TOKEN,
+      igAccountId: process.env.META_IG_ACCOUNT_ID || null,
+      pageId:      process.env.META_PAGE_ID || null,
+      pageName:    process.env.META_PAGE_NAME || 'Facebook Page',
+      pageToken:   process.env.META_PAGE_TOKEN,
+      connectedAt: new Date().toISOString(),
+    };
+  }
   return null;
 }
 
