@@ -57,7 +57,7 @@
     .d1{animation-delay:.03s}.d2{animation-delay:.06s}.d3{animation-delay:.09s}.d4{animation-delay:.12s}
 
     /* KPI */
-    .kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+    .kpi-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
     .kpi{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;position:relative;transition:box-shadow .15s}
     .kpi:hover{box-shadow:var(--sh-md)}
     .kpi-label{font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;display:flex;align-items:center;gap:6px}
@@ -110,10 +110,11 @@
     .mr-i.news{background:#EFF6FF;color:#3B82F6}
     .mr-i.alerts{background:#F0FDF4;color:var(--pos)}
     .mr-i.reddit{background:#FFF7ED;color:#EA580C}
+    .mr-i.youtube{background:#FEF2F2;color:#DC2626}
     .mr-i.social{background:#F5F3FF;color:#7C3AED}
     .mr-t{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;padding:2px 6px;border-radius:4px;text-align:center}
     .mr-t.news{background:#EFF6FF;color:#2563EB}.mr-t.alerts{background:#F0FDF4;color:#059669}
-    .mr-t.reddit{background:#FFF7ED;color:#EA580C}.mr-t.social{background:#F5F3FF;color:#7C3AED}
+    .mr-t.reddit{background:#FFF7ED;color:#EA580C}.mr-t.youtube{background:#FEF2F2;color:#DC2626}.mr-t.social{background:#F5F3FF;color:#7C3AED}
     .mr-b{padding:0 12px;min-width:0}
     .mr-title{font-size:13px;font-weight:500;color:var(--t0);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .mr-title a{color:inherit;text-decoration:none;transition:color .1s}
@@ -174,7 +175,8 @@
       <div class="kpi fu d1"><div class="kpi-label"><div class="kpi-dot" style="background:var(--pos)"></div>Positive</div><div class="kpi-val" id="kP" style="color:var(--pos)">-</div><div class="kpi-foot"><span class="kpi-pct pos" id="kPp">-</span><span class="kpi-sub">of total</span></div><div class="kpi-bar"><i id="kPb" style="background:var(--pos);width:0%"></i></div></div>
       <div class="kpi fu d2"><div class="kpi-label"><div class="kpi-dot" style="background:var(--neg)"></div>Negative</div><div class="kpi-val" id="kN" style="color:var(--neg)">-</div><div class="kpi-foot"><span class="kpi-pct neg" id="kNp">-</span><span class="kpi-sub">of total</span></div><div class="kpi-bar"><i id="kNb" style="background:var(--neg);width:0%"></i></div></div>
       <div class="kpi fu d3"><div class="kpi-label"><div class="kpi-dot" style="background:#3B82F6"></div>News</div><div class="kpi-val" id="kNw" style="color:#3B82F6">-</div><div class="kpi-foot"><span class="kpi-sub">Google News + API</span></div></div>
-      <div class="kpi fu d4"><div class="kpi-label"><div class="kpi-dot" style="background:#EA580C"></div>Reddit</div><div class="kpi-val" id="kR" style="color:#EA580C">-</div><div class="kpi-foot"><span class="kpi-sub">Brand discussions</span></div></div>
+      <div class="kpi fu d4"><div class="kpi-label"><div class="kpi-dot" style="background:#EA580C"></div>Reddit</div><div class="kpi-val" id="kR" style="color:#EA580C">-</div><div class="kpi-foot"><span class="kpi-sub">Discussions</span></div></div>
+      <div class="kpi fu d5" style="animation-delay:.16s"><div class="kpi-label"><div class="kpi-dot" style="background:#DC2626"></div>YouTube</div><div class="kpi-val" id="kYt" style="color:#DC2626">-</div><div class="kpi-foot"><span class="kpi-sub">Videos</span></div></div>
     </div>
   </div>
 
@@ -198,7 +200,7 @@
   <div class="section" id="ms">
     <div class="tbl">
       <div class="tbl-bar">
-        <select class="tf" id="fSrc" onchange="applyFilters()"><option value="all">All Sources</option><option value="news">News</option><option value="alerts">Alerts</option><option value="reddit">Reddit</option><option value="social">Social</option></select>
+        <select class="tf" id="fSrc" onchange="applyFilters()"><option value="all">All Sources</option><option value="news">News</option><option value="alerts">Alerts</option><option value="reddit">Reddit</option><option value="youtube">YouTube</option><option value="social">Social</option></select>
         <select class="tf" id="fSnt" onchange="applyFilters()"><option value="all">All Sentiment</option><option value="positive">Positive</option><option value="neutral">Neutral</option><option value="negative">Negative</option></select>
         <select class="tf" id="fSrt" onchange="applyFilters()"><option value="date">Newest</option><option value="sentiment">Sentiment</option></select>
         <input class="tf tf-s" type="text" id="fQ" placeholder="Search..." oninput="applyFilters()" />
@@ -248,12 +250,13 @@ async function loadAll(){
   document.getElementById('feed').innerHTML='<div class="ld"><div class="sp"></div><span class="ld-t">Scanning sources...</span></div>';
   try{
     // Fetch fresh data (triggers persistence on server)
-    const[news,alerts,reddit,bing,gnews,igM,fb]=await Promise.all([
+    const[news,alerts,reddit,bing,gnews,ytData,igM,fb]=await Promise.all([
       fetch('/api/news').then(r=>r.json()).catch(()=>[]),
       fetch('/api/alerts').then(r=>r.json()).catch(()=>[]),
       fetch('/api/reddit').then(r=>r.json()).catch(()=>[]),
       fetch('/api/bing').then(r=>r.json()).catch(()=>[]),
       fetch('/api/google').then(r=>r.json()).catch(()=>[]),
+      fetch('/api/youtube').then(r=>r.json()).catch(()=>[]),
       fetch('/api/instagram/mentions').then(r=>r.json()).catch(()=>[]),
       fetch('/api/facebook').then(r=>r.json()).catch(()=>({status:'pending'})),
     ]);
@@ -266,7 +269,7 @@ async function loadAll(){
 
     // Merge fresh + history, deduplicate
     const seen=new Set();
-    allMentions=[...(news||[]),...(alerts||[]),...(reddit||[]),...(bing||[]),...(gnews||[]),...(igM||[]),...fbI,...history]
+    allMentions=[...(news||[]),...(alerts||[]),...(reddit||[]),...(bing||[]),...(gnews||[]),...(ytData||[]),...(igM||[]),...fbI,...history]
       .filter(m=>{if(!m.title)return false;const k=(m.url||m.title.slice(0,80)).toLowerCase();if(seen.has(k))return false;seen.add(k);return true})
       .sort((a,b)=>new Date(b.date)-new Date(a.date));
 
@@ -278,13 +281,13 @@ async function loadAll(){
 
 function updateKpis(){
   const t=allMentions.length,p=allMentions.filter(m=>m.sentiment==='positive').length,n=allMentions.filter(m=>m.sentiment==='negative').length;
-  const nw=allMentions.filter(m=>m.type==='news').length,rd=allMentions.filter(m=>m.type==='reddit').length;
+  const nw=allMentions.filter(m=>m.type==='news').length,rd=allMentions.filter(m=>m.type==='reddit').length,yt=allMentions.filter(m=>m.type==='youtube').length;
   const pct=v=>t?Math.round(v/t*100)+'%':'-';
   document.getElementById('kT').textContent=t;
   document.getElementById('kTs').textContent=(activeDays?'last '+activeDays+' days':'all time')+' across all sources';
   document.getElementById('kP').textContent=p;document.getElementById('kPp').textContent=pct(p);document.getElementById('kPb').style.width=t?Math.round(p/t*100)+'%':'0%';
   document.getElementById('kN').textContent=n;document.getElementById('kNp').textContent=pct(n);document.getElementById('kNb').style.width=t?Math.round(n/t*100)+'%':'0%';
-  document.getElementById('kNw').textContent=nw;document.getElementById('kR').textContent=rd;
+  document.getElementById('kNw').textContent=nw;document.getElementById('kR').textContent=rd;document.getElementById('kYt').textContent=yt;
 }
 
 function updateCharts(){
@@ -316,6 +319,7 @@ function updateSources(news,alerts,reddit,gnews,ig,fb){
     {name:'News API',count:(news||[]).length,color:'#6366F1',on:(news||[]).length>0},
     {name:'Alerts',count:(alerts||[]).length,color:'#059669',on:true},
     {name:'Reddit',count:(reddit||[]).length,color:'#EA580C',on:(reddit||[]).length>0},
+    {name:'YouTube',count:(ytData||[]).length,color:'#DC2626',on:(ytData||[]).length>0},
     {name:'Instagram',color:'#EC4899',on:false,link:true},
     {name:'Facebook',color:'#3B82F6',on:false,link:true},
   ];
@@ -346,8 +350,8 @@ function applyFilters(){
   if(!allMentions.length){c.innerHTML='<div class="ld"><div class="sp"></div><span class="ld-t">Loading...</span></div>';return}
   if(!f.length){c.innerHTML='<div class="empty">No mentions match your filters.</div>';return}
   c.innerHTML=f.map(m=>{
-    const ic={news:'&#9889;',alerts:'&#9883;',reddit:'&#9673;',social:'&#10022;'};
-    const tl=m.type==='reddit'?'Reddit':m.type==='social'?(m.platform==='facebook'?'Facebook':'Instagram'):m.type==='news'?'News':'Alert';
+    const ic={news:'&#9889;',alerts:'&#9883;',reddit:'&#9673;',youtube:'&#9654;',social:'&#10022;'};
+    const tl=m.type==='youtube'?'YouTube':m.type==='reddit'?'Reddit':m.type==='social'?(m.platform==='facebook'?'Facebook':'Instagram'):m.type==='news'?'News':'Alert';
     const sc=m.sentimentScore!=null?m.sentimentScore:0;
     const scCls=sc>0.05?'p':sc<-0.05?'n':'u';
     const scTxt=sc>0?('+'+sc.toFixed(2)):sc.toFixed(2);

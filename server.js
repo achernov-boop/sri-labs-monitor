@@ -711,6 +711,80 @@ app.get('/api/google', async (req, res) => {
   }
 });
 
+// ── API: YOUTUBE ───────────────────────────────────────────────────────────────
+// Free, no API key — scrapes YouTube search results
+app.get('/api/youtube', async (req, res) => {
+  try {
+    const items = await cached('youtube', 30 * 60 * 1000, async () => {
+      const results = [];
+      const keywords = CONFIG.KEYWORDS.slice(0, 4);
+
+      for (const kw of keywords) {
+        try {
+          const { data: html } = await axios.get(
+            'https://www.youtube.com/results?search_query=' + encodeURIComponent(kw),
+            { headers: { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36' }, timeout: 10000 }
+          );
+
+          // Extract video data from the page's initial data
+          const dataMatch = html.match(/var ytInitialData = ({.+?});<\/script>/);
+          if (!dataMatch) continue;
+
+          try {
+            const ytData = JSON.parse(dataMatch[1]);
+            const contents = ytData?.contents?.twoColumnSearchResultsRenderer?.primaryContents
+              ?.sectionListRenderer?.contents?.[0]?.itemSectionRenderer?.contents || [];
+
+            contents.forEach((item, i) => {
+              const video = item.videoRenderer;
+              if (!video) return;
+              const title = video.title?.runs?.[0]?.text || '';
+              const channel = video.ownerText?.runs?.[0]?.text || '';
+              const videoId = video.videoId || '';
+              const viewText = video.viewCountText?.simpleText || '';
+              const dateText = video.publishedTimeText?.simpleText || '';
+              const desc = video.detailedMetadataSnippets?.[0]?.snippetText?.runs?.map(r => r.text).join('') || '';
+
+              if (title && videoId) {
+                results.push({
+                  id:          `yt-${videoId}`,
+                  type:        'youtube',
+                  sourceName:  channel,
+                  title:       title,
+                  description: desc.slice(0, 300),
+                  url:         `https://youtube.com/watch?v=${videoId}`,
+                  date:        dateText || new Date().toISOString(),
+                  ...analyzeSentimentFull(title + ' ' + desc),
+                  views:       viewText,
+                  matchedKeyword: kw,
+                });
+              }
+            });
+          } catch (_) {}
+
+          await new Promise(r => setTimeout(r, 1000));
+        } catch (e) {
+          console.warn(`[YouTube] Error for "${kw}":`, e.message);
+        }
+      }
+
+      // Deduplicate
+      const seen = new Set();
+      return results.filter(r => {
+        if (seen.has(r.id)) return false;
+        seen.add(r.id);
+        return true;
+      });
+    });
+
+    console.log(`[YouTube] ${items.length} videos`);
+    res.json(enrichAndPersist(items));
+  } catch (err) {
+    console.error('[YouTube] Error:', err.message);
+    res.json([]);
+  }
+});
+
 // ── AUTH: MANUAL TOKEN SETUP (bypasses OAuth redirect) ────────────────────────
 app.get('/auth/setup', async (req, res) => {
   const { token } = req.query;
