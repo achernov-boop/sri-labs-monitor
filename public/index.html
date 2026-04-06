@@ -309,9 +309,11 @@ function sources(nw,al,rd,gn,yt,tt,ig,fb){
   fetch('/api/facebook').then(r=>r.json()).then(d=>{if(d.status==='connected'){s[fbIdx].on=true;s[fbIdx].sub=d.page?.name;draw()}}).catch(()=>{});
   // Map source names to filter values
   const typeMap={'Google News':'news','News API':'news','Alerts':'alerts','Reddit':'reddit','YouTube':'youtube','TikTok':'tiktok','Instagram':'social','Facebook':'social'};
+  // Connected social chips should also be clickable (filter to social)
+
   function draw(){el.innerHTML=s.map(x=>{
     const fv=typeMap[x.n]||'all';
-    const clickable=x.on&&x.c>0;
+    const clickable=x.on&&(x.c>0||!x.lk);
     return'<div class="src'+(clickable?' src-click':'')+'" '+(clickable?'onclick="document.getElementById(\'fS\').value=\''+fv+'\';render();document.getElementById(\'feed-section\').scrollIntoView({behavior:\'smooth\'})"':'')+' style="'+(clickable?'cursor:pointer':'')+'">'
       +'<div class="src-d" style="background:'+(x.on?x.cl:'#D4D4D8')+(x.on?';box-shadow:0 0 4px '+x.cl:'')+'"></div>'
       +'<span class="src-n">'+esc(x.n)+(x.sub?' <span style="color:var(--t3)">'+esc(x.sub)+'</span>':'')+'</span>'
@@ -339,7 +341,7 @@ function render(){
     const tl=m.type==='tiktok'?'TikTok':m.type==='youtube'?'YouTube':m.type==='reddit'?'Reddit':m.type==='social'?(m.platform==='facebook'?'Facebook':'Instagram'):m.type==='news'?'News':'Alert';
     const sc=m.sentimentScore||0;const cls=sc>0.1?'p':sc<-0.15?'n':'u';
     const dd=m.date?new Date(m.date):null;const isApprox=m.type==='youtube'||m.type==='tiktok';
-    const timeStr=dd?(isApprox?dd.toLocaleDateString([],{month:'short',year:'numeric'}):ago(m.date)):'';
+    const timeStr=isApprox&&m.relativeDate?m.relativeDate:(dd?ago(m.date):'');
     const dateStr=dd?dd.toLocaleDateString([],{month:'short',day:'numeric',year:dd.getFullYear()<2025?'numeric':undefined}):'';
     return'<div class="mr"><div class="mi '+esc(m.type)+'">'+(ic[m.type]||'&#9679;')+'</div><div><span class="mt '+esc(m.type)+'">'+tl+'</span></div><div class="mb"><div class="mb-t">'+(m.url?'<a href="'+esc(m.url)+'" target="_blank" rel="noopener">'+esc(m.title)+'</a>':esc(m.title))+'</div><div class="mb-m"><span>'+esc(m.sourceName||'')+'</span>'+(timeStr?'<span class="mb-sep"></span><span>'+timeStr+'</span>':'')+'</div></div><div class="ms"><span class="ms-b '+esc(m.sentiment)+'">'+m.sentiment+'</span><span class="ms-s '+cls+'">'+(sc>0?'+':'')+sc.toFixed(2)+'</span></div><div class="md">'+dateStr+'</div></div>'
   }).join('');

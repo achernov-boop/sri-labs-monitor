@@ -785,6 +785,7 @@ app.get('/api/youtube', async (req, res) => {
                   description: desc.slice(0, 300),
                   url:         `https://youtube.com/watch?v=${videoId}`,
                   date:        isoDate,
+                  relativeDate: dateText || '',
                   ...analyzeSentimentFull(title + ' ' + desc),
                   views:       viewText,
                   matchedKeyword: kw,
