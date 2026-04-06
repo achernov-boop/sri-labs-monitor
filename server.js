@@ -1301,19 +1301,58 @@ app.get('/api/facebook', async (req, res) => {
             access_token: pageToken,
           },
         });
-        mentions = (data.data || []).filter(p => p.message).map((p, i) => ({
-          id:          `fb-tag-${p.id || i}`,
-          type:        'social',
-          platform:    'facebook',
-          sourceName:  p.from?.name || 'Facebook User',
-          title:       (p.message || 'Tagged in a post').slice(0, 120),
-          description: p.message || '',
-          url:         p.permalink_url || '',
-          date:        p.created_time || new Date().toISOString(),
-          sentiment:   analyzeSentiment(p.message || ''),
-        }));
+        // Filter out spam, phishing, and empty reshares
+        const FB_SPAM = ['unusual activity','final warning','detected a lot','enable advanced security',
+          'your profile will be','account will be disabled','verify your account','click here to verify'];
+        mentions = (data.data || [])
+          .filter(p => {
+            if (!p.message || p.message.length < 10) return false;
+            const lower = p.message.toLowerCase();
+            if (FB_SPAM.some(s => lower.includes(s))) return false;
+            return true;
+          })
+          .map((p, i) => ({
+            id:          `fb-tag-${p.id || i}`,
+            type:        'social',
+            platform:    'facebook',
+            sourceName:  p.from?.name || 'Facebook User',
+            title:       (p.message || 'Tagged in a post').slice(0, 120),
+            description: p.message || '',
+            url:         p.permalink_url || '',
+            date:        p.created_time || new Date().toISOString(),
+            sentiment:   analyzeSentiment(p.message || ''),
+          }));
       } catch (e) {
         console.warn('[Facebook] Tagged error:', e.response?.data?.error?.message || e.message);
+      }
+
+      // Page reviews/ratings
+      let reviews = [];
+      try {
+        const { data } = await axios.get(`${base}/${pageId}/ratings`, {
+          params: {
+            fields: 'review_text,rating,reviewer,created_time',
+            limit: 50,
+            access_token: pageToken,
+          },
+        });
+        reviews = (data.data || [])
+          .filter(r => r.review_text && r.review_text.length > 5)
+          .map((r, i) => ({
+            id:          `fb-review-${i}-${Date.now()}`,
+            type:        'social',
+            platform:    'facebook',
+            sourceName:  r.reviewer?.name || 'Facebook Review',
+            title:       (r.review_text || '').slice(0, 120),
+            description: r.review_text || '',
+            url:         '',
+            date:        r.created_time || new Date().toISOString(),
+            sentiment:   analyzeSentiment(r.review_text || ''),
+            rating:      r.rating,
+          }));
+        console.log(`[Facebook] ${reviews.length} reviews`);
+      } catch (e) {
+        console.warn('[Facebook] Reviews error:', e.response?.data?.error?.message || e.message);
       }
 
       return {
@@ -1327,10 +1366,11 @@ app.get('/api/facebook', async (req, res) => {
         },
         posts,
         mentions,
+        reviews,
       };
     });
 
-    console.log(`[Facebook] ${fbData.posts?.length || 0} posts, ${fbData.mentions?.length || 0} mentions`);
+    console.log(`[Facebook] ${fbData.mentions?.length || 0} mentions, ${fbData.reviews?.length || 0} reviews`);
     res.json(fbData);
   } catch (err) {
     console.error('[Facebook] Error:', err.message);
