@@ -1249,6 +1249,38 @@ app.get('/api/instagram/mentions', async (req, res) => {
         console.warn('[IG Mentions] @mentions error:', e.response?.data?.error?.message || e.message);
       }
 
+      // 4. Comments on own posts (from other users)
+      try {
+        const { data: mediaData } = await axios.get(`${base}/${igAccountId}/media`, {
+          params: {
+            fields: 'id,caption,permalink,comments{text,username,timestamp,like_count}',
+            limit: 25,
+            access_token: accessToken,
+          },
+        });
+        (mediaData.data || []).forEach(post => {
+          (post.comments?.data || []).forEach(c => {
+            // Only substantive comments from others (not emojis, not own account)
+            if (!c.text || c.text.length < 15) return;
+            if (c.username === CONFIG.INSTAGRAM_HANDLE || c.username === 'sri_labs_') return;
+            items.push({
+              id:          `ig-comment-${c.id || Date.now()}`,
+              type:        'social',
+              platform:    'instagram',
+              sourceName:  c.username ? `@${c.username}` : 'IG commenter',
+              title:       c.text.slice(0, 120),
+              description: c.text,
+              url:         post.permalink || '',
+              date:        c.timestamp || new Date().toISOString(),
+              sentiment:   analyzeSentiment(c.text),
+              engagement:  c.like_count || 0,
+            });
+          });
+        });
+      } catch (e) {
+        console.warn('[IG Mentions] Comments error:', e.response?.data?.error?.message || e.message);
+      }
+
       // Deduplicate by id
       const seen = new Set();
       return items.filter(i => {
@@ -1341,7 +1373,7 @@ app.get('/api/facebook', async (req, res) => {
         const { data } = await axios.get(`${base}/${pageId}/ratings`, {
           params: {
             fields: 'review_text,rating,reviewer,created_time',
-            limit: 50,
+            limit: 100,
             access_token: pageToken,
           },
         });
@@ -1364,6 +1396,37 @@ app.get('/api/facebook', async (req, res) => {
         console.warn('[Facebook] Reviews error:', e.response?.data?.error?.message || e.message);
       }
 
+      // Comments on page posts (from fans/visitors)
+      let fbComments = [];
+      try {
+        const { data: postsData } = await axios.get(`${base}/${pageId}/posts`, {
+          params: {
+            fields: 'id,permalink_url,comments{message,from,created_time}',
+            limit: 20,
+            access_token: pageToken,
+          },
+        });
+        (postsData.data || []).forEach(post => {
+          (post.comments?.data || []).forEach(c => {
+            if (!c.message || c.message.length < 15) return;
+            fbComments.push({
+              id:          `fb-comment-${c.id || Date.now()}`,
+              type:        'social',
+              platform:    'facebook',
+              sourceName:  c.from?.name || 'Facebook User',
+              title:       c.message.slice(0, 120),
+              description: c.message,
+              url:         post.permalink_url || '',
+              date:        c.created_time || new Date().toISOString(),
+              sentiment:   analyzeSentiment(c.message),
+            });
+          });
+        });
+        console.log(`[Facebook] ${fbComments.length} post comments`);
+      } catch (e) {
+        console.warn('[Facebook] Comments error:', e.response?.data?.error?.message || e.message);
+      }
+
       return {
         status: 'connected',
         page: {
@@ -1376,6 +1439,7 @@ app.get('/api/facebook', async (req, res) => {
         posts,
         mentions,
         reviews,
+        comments: fbComments,
       };
     });
 
