@@ -251,7 +251,8 @@ async function loadAll(){
       fetch('/api/instagram/mentions').then(r=>r.json()).catch(()=>[]),fetch('/api/facebook').then(r=>r.json()).catch(()=>({status:'pending'})),
     ]);
     const h=await(await fetch(aD?'/api/history?days='+aD:'/api/history')).json().catch(()=>[]);
-    const fbI=[...((fb.posts||[]).map(p=>({...p,type:'social',platform:'facebook'}))),...((fb.mentions||[]).map(m=>({...m,type:'social',platform:'facebook'})))];
+    // Only external FB mentions (tagged posts by others), not own page posts
+    const fbI=(fb.mentions||[]).map(m=>({...m,type:'social',platform:'facebook'}));
     const cut=aD?new Date(Date.now()-aD*864e5):null;
     const seen=new Set();
     D=[...(nw||[]),...(al||[]),...(rd||[]),...(bi||[]),...(gn||[]),...(yt||[]),...(tt||[]),...(ig||[]),...fbI,...h]

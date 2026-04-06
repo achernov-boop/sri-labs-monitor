@@ -1288,32 +1288,8 @@ app.get('/api/facebook', async (req, res) => {
         console.warn('[Facebook] Page info error:', e.response?.data?.error?.message || e.message);
       }
 
-      // Page feed (own posts)
+      // Skip own page posts — only external mentions matter
       let posts = [];
-      try {
-        const { data } = await axios.get(`${base}/${pageId}/feed`, {
-          params: {
-            fields: 'message,created_time,permalink_url,shares,full_picture,reactions.summary(true),comments.summary(true)',
-            limit: 25,
-            access_token: pageToken,
-          },
-        });
-        posts = (data.data || []).filter(p => p.message).map((p, i) => ({
-          id:          `fb-post-${p.id || i}`,
-          type:        'social',
-          platform:    'facebook',
-          sourceName:  pageInfo.name || 'Facebook Page',
-          title:       (p.message || '').slice(0, 120),
-          description: p.message || '',
-          url:         p.permalink_url || '',
-          date:        p.created_time || new Date().toISOString(),
-          sentiment:   analyzeSentiment(p.message || ''),
-          image:       p.full_picture || null,
-          engagement:  (p.reactions?.summary?.total_count || 0) + (p.comments?.summary?.total_count || 0) + (p.shares?.count || 0),
-        }));
-      } catch (e) {
-        console.warn('[Facebook] Feed error:', e.response?.data?.error?.message || e.message);
-      }
 
       // Tagged posts (posts by others that tag the page)
       let mentions = [];
