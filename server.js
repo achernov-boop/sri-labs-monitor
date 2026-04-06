@@ -1249,38 +1249,6 @@ app.get('/api/instagram/mentions', async (req, res) => {
         console.warn('[IG Mentions] @mentions error:', e.response?.data?.error?.message || e.message);
       }
 
-      // 4. Comments on own posts (from other users)
-      try {
-        const { data: mediaData } = await axios.get(`${base}/${igAccountId}/media`, {
-          params: {
-            fields: 'id,caption,permalink,comments{text,username,timestamp,like_count}',
-            limit: 25,
-            access_token: accessToken,
-          },
-        });
-        (mediaData.data || []).forEach(post => {
-          (post.comments?.data || []).forEach(c => {
-            // Only substantive comments from others (not emojis, not own account)
-            if (!c.text || c.text.length < 15) return;
-            if (c.username === CONFIG.INSTAGRAM_HANDLE || c.username === 'sri_labs_') return;
-            items.push({
-              id:          `ig-comment-${c.id || Date.now()}`,
-              type:        'social',
-              platform:    'instagram',
-              sourceName:  c.username ? `@${c.username}` : 'IG commenter',
-              title:       c.text.slice(0, 120),
-              description: c.text,
-              url:         post.permalink || '',
-              date:        c.timestamp || new Date().toISOString(),
-              sentiment:   analyzeSentiment(c.text),
-              engagement:  c.like_count || 0,
-            });
-          });
-        });
-      } catch (e) {
-        console.warn('[IG Mentions] Comments error:', e.response?.data?.error?.message || e.message);
-      }
-
       // Deduplicate by id
       const seen = new Set();
       return items.filter(i => {
