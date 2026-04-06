@@ -802,7 +802,7 @@ app.get('/api/youtube', async (req, res) => {
       // Filter: remove own channel, require brand context, deduplicate
       const OWN_CHANNELS = ['sri labs', 'skin research institute', 'sri_labs', 'srilabs'];
       const YT_BRAND = ['sri labs','sri dry','sri style','srilabs','dryq','dry q','dry-q',
-        'stylewrap','style wrap','styleq flat','styleq hair','curlq','curl q',
+        'stylewrap pro','style wrap pro','styleq flat','styleq hair','curlq','curl q',
         'renewglow','keewee','skin research institute','skinresearch'];
       const YT_EXCLUDE = ['mountain hardwear','harry styles','gaming','minecraft'];
       const seen = new Set();
@@ -874,8 +874,13 @@ app.get('/api/tiktok', async (req, res) => {
       }
 
       // Brand verification + deduplicate
-      const TT_BRAND = ['sri labs','srilabs','dryq','dry q','dry-q','styleq','stylewrap',
-        'style wrap','curlq','curl q','renewglow','keewee','skin research institute','skinresearch'];
+      // Use specific product names — "style wrap" alone matches food/clothing wraps
+      const TT_BRAND = ['sri labs','srilabs','sri dryq','sri dry q','dryq hair','dryq blow',
+        'dry q hair','dry q blow','styleq flat','styleq hair','style q flat',
+        'stylewrap pro','style wrap pro','curlq','curl q curling',
+        'renewglow','keewee shampoo','skin research institute','skinresearchinstitute',
+        '#sridryq','#stylewrappro','#skinresearchinstitute','#curlq',
+        '@skinresearchinstitute','@sri_labs'];
       const seen = new Set();
       return results.filter(r => {
         const key = r.title.slice(0, 60).toLowerCase();
