@@ -2,12 +2,15 @@
 //  SRI Labs PR Intelligence Dashboard — Server  v2.0
 // ──────────────────────────────────────────────────────────────────────────────
 
-const express  = require('express');
-const axios    = require('axios');
-const xml2js   = require('xml2js');
-const cheerio  = require('cheerio');
-const path     = require('path');
-const fs       = require('fs');
+const express   = require('express');
+const axios     = require('axios');
+const xml2js    = require('xml2js');
+const cheerio   = require('cheerio');
+const Sentiment = require('sentiment');
+const path      = require('path');
+const fs        = require('fs');
+
+const sentiment = new Sentiment();
 
 try { require('dotenv').config(); } catch (_) {}
 
@@ -83,29 +86,69 @@ function cached(key, ttlMs, fetchFn) {
   });
 }
 
-// ── SENTIMENT ENGINE ───────────────────────────────────────────────────────────
-const POSITIVE_WORDS = [
-  'great','excellent','amazing','love','best','perfect','wonderful','outstanding',
-  'fantastic','recommend','impressive','innovative','breakthrough','effective',
-  'results','award','launch','growth','expansion','success','leading','quality',
-  'popular','trusted','favorite','clinical','proven','featured','top','praised',
-  'wins','partnership','deal','achievement','recognized','honored','celebrates',
-];
-const NEGATIVE_WORDS = [
-  'bad','terrible','awful','hate','worst','poor','damage','complaint','problem',
-  'issue','fail','failure','recall','lawsuit','defect','harmful','toxic','concern',
-  'warning','danger','fake','scam','fraud','misleading','disappointed','avoid',
-  'refund','broken','investigation','penalty','fine','ban','accused','scandal',
-];
-
+// ── SENTIMENT ENGINE (AFINN-165 NLP) ──────────────────────────────────────────
+// Returns { sentiment, sentimentScore } — sentiment is the label, sentimentScore is normalized
+function analyzeSentimentFull(text) {
+  const result = sentiment.analyze(text || '');
+  const score = Math.round(result.comparative * 100) / 100;
+  return {
+    sentiment: score > 0.05 ? 'positive' : score < -0.05 ? 'negative' : 'neutral',
+    sentimentScore: score,
+  };
+}
+// Compat wrapper — returns just the label string for existing call sites
 function analyzeSentiment(text) {
-  const lower = (text || '').toLowerCase();
-  let pos = 0, neg = 0;
-  POSITIVE_WORDS.forEach(w => { if (lower.includes(w)) pos++; });
-  NEGATIVE_WORDS.forEach(w => { if (lower.includes(w)) neg++; });
-  if (pos > neg) return 'positive';
-  if (neg > pos) return 'negative';
-  return 'neutral';
+  return analyzeSentimentFull(text).sentiment;
+}
+
+// Enrich mentions with sentiment scores and persist
+function enrichAndPersist(items) {
+  items.forEach(m => {
+    if (m.sentimentScore == null) {
+      const full = analyzeSentimentFull((m.title || '') + ' ' + (m.description || ''));
+      m.sentiment = full.sentiment;
+      m.sentimentScore = full.sentimentScore;
+    }
+  });
+  persistMentions(items);
+  return items;
+}
+
+// ── PERSISTENT STORAGE ────────────────────────────────────────────────────────
+const DB_FILE = path.join(__dirname, 'mentions.db.json');
+
+function loadDb() {
+  try {
+    if (fs.existsSync(DB_FILE)) return JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
+  } catch (_) {}
+  return { mentions: {} }; // keyed by URL for dedup
+}
+
+function saveDb(db) {
+  try { fs.writeFileSync(DB_FILE, JSON.stringify(db)); } catch (_) {}
+}
+
+function persistMentions(items) {
+  const db = loadDb();
+  let added = 0;
+  items.forEach(m => {
+    const key = m.url || m.id;
+    if (key && !db.mentions[key]) {
+      db.mentions[key] = { ...m, storedAt: new Date().toISOString() };
+      added++;
+    }
+  });
+  if (added > 0) saveDb(db);
+  return added;
+}
+
+function getHistoricalMentions(days) {
+  const db = loadDb();
+  const all = Object.values(db.mentions);
+  if (!days) return all;
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - days);
+  return all.filter(m => new Date(m.date || m.storedAt) >= cutoff);
 }
 
 function stripHtml(str) {
@@ -431,7 +474,7 @@ app.get('/api/news', async (req, res) => {
         }));
     });
     console.log(`[News API] ${articles.length} articles`);
-    res.json(articles);
+    res.json(enrichAndPersist(articles));
   } catch (err) {
     console.error('[News API] Error:', err.message);
     res.json([]);
@@ -480,7 +523,7 @@ app.get('/api/alerts', async (req, res) => {
       return items;
     });
     console.log(`[Alerts] ${all.length} items`);
-    res.json(all);
+    res.json(enrichAndPersist(all));
   } catch (err) {
     console.error('[Alerts] Error:', err.message);
     res.json([]);
@@ -540,7 +583,7 @@ app.get('/api/reddit', async (req, res) => {
     });
 
     console.log(`[Reddit] ${items.length} posts`);
-    res.json(items);
+    res.json(enrichAndPersist(items));
   } catch (err) {
     console.error('[Reddit] Error:', err.message);
     res.json([]);
@@ -575,7 +618,7 @@ app.get('/api/bing', async (req, res) => {
     });
 
     console.log(`[Bing News] ${items.length} articles`);
-    res.json(items);
+    res.json(enrichAndPersist(items));
   } catch (err) {
     console.error('[Bing News] Error:', err.message);
     res.json([]);
@@ -639,7 +682,7 @@ app.get('/api/google', async (req, res) => {
     });
 
     console.log(`[Google News] ${items.length} articles`);
-    res.json(items);
+    res.json(enrichAndPersist(items));
   } catch (err) {
     console.error('[Google News] Error:', err.message);
     res.json([]);
@@ -1016,6 +1059,14 @@ app.get('/api/facebook', async (req, res) => {
     console.error('[Facebook] Error:', err.message);
     res.json({ status: 'error', message: err.message });
   }
+});
+
+// ── API: HISTORY (persistent stored mentions) ─────────────────────────────────
+app.get('/api/history', (req, res) => {
+  const days = req.query.days ? parseInt(req.query.days) : null;
+  const mentions = getHistoricalMentions(days);
+  console.log(`[History] ${mentions.length} stored mentions (${days ? days + 'd' : 'all'})`);
+  res.json(mentions);
 });
 
 // ── START ──────────────────────────────────────────────────────────────────────
