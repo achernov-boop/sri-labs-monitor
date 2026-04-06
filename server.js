@@ -1302,14 +1302,22 @@ app.get('/api/facebook', async (req, res) => {
             access_token: pageToken,
           },
         });
-        // Filter out spam, phishing, and empty reshares
+        // Filter out spam, phishing, empty reshares, non-English, scientific papers
         const FB_SPAM = ['unusual activity','final warning','detected a lot','enable advanced security',
-          'your profile will be','account will be disabled','verify your account','click here to verify'];
+          'your profile will be','account will be disabled','verify your account','click here to verify',
+          '𝖥𝖨𝖭𝖠𝖫','𝖣𝖤𝖳𝖤𝖢𝖳','𝖾𝗅 𝖽𝖾𝗉𝖺𝗋𝗍','𝗇𝗈𝗍𝗂𝖿𝗂𝖼𝖺',
+          'polyamine','epidermal function','controlled changes'];
         mentions = (data.data || [])
           .filter(p => {
-            if (!p.message || p.message.length < 10) return false;
-            const lower = p.message.toLowerCase();
-            if (FB_SPAM.some(s => lower.includes(s))) return false;
+            if (!p.message || p.message.length < 15) return false;
+            const msg = p.message;
+            const lower = msg.toLowerCase();
+            // Filter spam
+            if (FB_SPAM.some(s => lower.includes(s) || msg.includes(s))) return false;
+            // Filter empty reshares (just the brand name, nothing else)
+            if (lower.trim() === 'skin research institute') return false;
+            // Filter non-English (Spanish, etc.)
+            if (lower.includes('¿') || lower.includes('¡') || lower.includes('también')) return false;
             return true;
           })
           .map((p, i) => ({
@@ -1338,7 +1346,7 @@ app.get('/api/facebook', async (req, res) => {
           },
         });
         reviews = (data.data || [])
-          .filter(r => r.review_text && r.review_text.length > 5)
+          .filter(r => r.review_text && r.review_text.length > 15)
           .map((r, i) => ({
             id:          `fb-review-${i}-${Date.now()}`,
             type:        'social',

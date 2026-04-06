@@ -313,7 +313,7 @@ function sources(nw,al,rd,gn,yt,tt,ig,fb){
 
   function draw(){el.innerHTML=s.map(x=>{
     const fv=typeMap[x.n]||'all';
-    const clickable=x.on&&(x.c>0||!x.lk);
+    const clickable=x.on;
     return'<div class="src'+(clickable?' src-click':'')+'" '+(clickable?'onclick="document.getElementById(\'fS\').value=\''+fv+'\';render();document.getElementById(\'feed-section\').scrollIntoView({behavior:\'smooth\'})"':'')+' style="'+(clickable?'cursor:pointer':'')+'">'
       +'<div class="src-d" style="background:'+(x.on?x.cl:'#D4D4D8')+(x.on?';box-shadow:0 0 4px '+x.cl:'')+'"></div>'
       +'<span class="src-n">'+esc(x.n)+(x.sub?' <span style="color:var(--t3)">'+esc(x.sub)+'</span>':'')+'</span>'
