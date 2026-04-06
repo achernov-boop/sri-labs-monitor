@@ -1018,6 +1018,7 @@ app.get('/auth/meta/callback', async (req, res) => {
 
   try {
     // Exchange code → short-lived token
+    console.log('[Meta OAuth] Exchanging code for token...');
     const { data: tokenData } = await axios.get(`${base}/oauth/access_token`, {
       params: {
         client_id: CONFIG.META_APP_ID, client_secret: CONFIG.META_APP_SECRET,
@@ -1025,6 +1026,7 @@ app.get('/auth/meta/callback', async (req, res) => {
       },
     });
     const shortToken = tokenData.access_token;
+    console.log('[Meta OAuth] Got short token');
 
     // Exchange → long-lived token (60 days)
     const { data: longData } = await axios.get(`${base}/oauth/access_token`, {
@@ -1035,12 +1037,20 @@ app.get('/auth/meta/callback', async (req, res) => {
       },
     });
     const longToken = longData.access_token;
+    console.log('[Meta OAuth] Got long-lived token');
+
+    // Check permissions
+    try {
+      const { data: perms } = await axios.get(`${base}/me/permissions`, { params: { access_token: longToken } });
+      console.log('[Meta OAuth] Permissions:', (perms.data||[]).map(p => p.permission + ':' + p.status).join(', '));
+    } catch (_) {}
 
     // Get Facebook Pages
     const { data: pagesData } = await axios.get(`${base}/me/accounts`, {
       params: { access_token: longToken },
     });
     const pages = pagesData.data || [];
+    console.log('[Meta OAuth] Found', pages.length, 'pages:', pages.map(p => p.name || p.id).join(', '));
     if (!pages.length) {
       return res.redirect('/?meta_error=no_facebook_page');
     }
