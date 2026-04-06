@@ -681,19 +681,24 @@ app.get('/api/google', async (req, res) => {
         }
       }
 
-      // Filter out false positives
-      const EXCLUDE = ['singapore', 'sri lanka', 'sri lankan', 'colombo', 'novotech cro',
-        'dermatology research', 'clinical trial', 'autoimmune', 'psoriasis', 'eczema',
-        'dupilumab', 'atopic dermatitis', 'mountain hardwear', 'ukclimbing', 'ukcl',
-        'waterproof fabric', 'plasmic jacket', 'rain jacket', 'stanford research',
-        'sri international', 'menlo park nonprofit', 'invented siri'];
+      // Only keep articles that are genuinely about SRI Labs brands
+      const BRAND_TERMS = ['sri labs','srilabs','dryq','dry q','dry-q','styleq flat iron',
+        'styleq hair','stylewrap','style wrap','curlq','curl q','renewglow','renew glow',
+        'keewee shampoo','skin research institute','skinresearchinstitute',
+        'sri dryq','sri styleq','sri curlq','coanda multitool'];
+      const EXCLUDE = ['singapore','sri lanka','sri lankan','colombo','mountain hardwear',
+        'ukclimbing','waterproof fabric','plasmic jacket','rain jacket','stanford research',
+        'sri international','invented siri','harry styles'];
       const filtered = results.filter(r => {
-        const text = (r.title + ' ' + r.description).toLowerCase();
-        // If it matched a specific product keyword, always keep it
-        if (['dryq','styleq','curlq','renewglow','keewee','stylewrap','srilabs','sri labs']
-            .some(k => text.includes(k))) return true;
-        // Otherwise filter out known false positives
-        return !EXCLUDE.some(ex => text.includes(ex));
+        const text = (r.title + ' ' + (r.description || '') + ' ' + (r.matchedKeyword || '')).toLowerCase();
+        // Exclude known false positives first
+        if (EXCLUDE.some(ex => text.includes(ex))) return false;
+        // Articles that matched specific product keywords (DryQ, StyleWrap, etc.) are likely real
+        const kw = (r.matchedKeyword || '').toLowerCase();
+        if (['dryq','styleq','curlq','renewglow','keewee shampoo','stylewrap pro'].some(p => kw.includes(p))) return true;
+        // For broader keywords (SRI Labs, skin research institute), verify brand is in text
+        if (BRAND_TERMS.some(k => (r.title + ' ' + (r.description || '')).toLowerCase().includes(k))) return true;
+        return false;
       });
 
       // Deduplicate by title
@@ -790,14 +795,23 @@ app.get('/api/youtube', async (req, res) => {
         }
       }
 
-      // Filter out SRI Labs' own channel + deduplicate
+      // Filter: remove own channel, require brand context, deduplicate
       const OWN_CHANNELS = ['sri labs', 'skin research institute', 'sri_labs', 'srilabs'];
+      const YT_BRAND = ['sri labs','sri dry','sri style','srilabs','dryq','dry q','dry-q',
+        'stylewrap','style wrap','styleq flat','styleq hair','curlq','curl q',
+        'renewglow','keewee','skin research institute','skinresearch'];
+      const YT_EXCLUDE = ['mountain hardwear','harry styles','gaming','minecraft'];
       const seen = new Set();
       return results.filter(r => {
         if (seen.has(r.id)) return false;
         seen.add(r.id);
+        // Exclude own channel
         const ch = (r.sourceName || '').toLowerCase().trim();
         if (OWN_CHANNELS.some(own => ch === own || ch.includes(own))) return false;
+        // Must mention brand in title or description
+        const text = (r.title + ' ' + r.description).toLowerCase();
+        if (YT_EXCLUDE.some(ex => text.includes(ex))) return false;
+        if (!YT_BRAND.some(k => text.includes(k))) return false;
         return true;
       });
     });
