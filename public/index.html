@@ -89,6 +89,7 @@
     .srcs{display:flex;gap:6px;flex-wrap:wrap}
     .src{display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:6px 12px;font-size:11px;transition:.12s}
     .src:hover{border-color:var(--ring);box-shadow:0 1px 4px rgba(0,0,0,.04)}
+    .src-click:hover{background:var(--subtle);border-color:var(--brand)}
     .src-d{width:5px;height:5px;border-radius:50%}
     .src-n{font-weight:500;color:var(--t1)}
     .src-c{font-weight:700;color:var(--t0);background:var(--subtle);padding:1px 6px;border-radius:99px;font-size:10px;min-width:20px;text-align:center}
@@ -233,7 +234,7 @@ async function init(){
   try{
     const c=await(await fetch('/api/config')).json();
     const el=document.getElementById('kw');
-    c.keywords.forEach(w=>{const s=document.createElement('span');s.className='pill';s.textContent=w;s.onclick=()=>{if(aKw===w){aKw=null;document.querySelectorAll('.pill').forEach(x=>x.classList.remove('on'))}else{aKw=w;document.querySelectorAll('.pill').forEach(x=>x.classList.remove('on'));s.classList.add('on')}render()};el.appendChild(s)});
+    c.keywords.forEach(w=>{const s=document.createElement('span');s.className='pill';s.textContent=w;s.onclick=()=>{if(aKw===w){aKw=null;document.querySelectorAll('.pill').forEach(x=>x.classList.remove('on'))}else{aKw=w;document.querySelectorAll('.pill').forEach(x=>x.classList.remove('on'));s.classList.add('on')}render();document.getElementById('feed-section').scrollIntoView({behavior:'smooth'})};el.appendChild(s)});
   }catch(_){}
 }
 
@@ -298,7 +299,17 @@ function sources(nw,al,rd,gn,yt,ig,fb){
   ];
   fetch('/api/instagram').then(r=>r.json()).then(d=>{if(d.status==='connected'){s[4].on=true;s[4].sub='@'+d.handle;draw()}}).catch(()=>{});
   fetch('/api/facebook').then(r=>r.json()).then(d=>{if(d.status==='connected'){s[5].on=true;s[5].sub=d.page?.name;draw()}}).catch(()=>{});
-  function draw(){el.innerHTML=s.map(x=>'<div class="src"><div class="src-d" style="background:'+(x.on?x.cl:'#D4D4D8')+(x.on?';box-shadow:0 0 4px '+x.cl:'')+'"></div><span class="src-n">'+esc(x.n)+(x.sub?' <span style="color:var(--t3)">'+esc(x.sub)+'</span>':'')+'</span>'+(x.c!=null?'<span class="src-c">'+x.c+'</span>':'')+(!x.on&&x.lk?'<a href="/auth/setup">Connect</a>':'')+'</div>').join('')}
+  // Map source names to filter values
+  const typeMap={'Google News':'news','News API':'news','Alerts':'alerts','Reddit':'reddit','YouTube':'youtube','Instagram':'social','Facebook':'social'};
+  function draw(){el.innerHTML=s.map(x=>{
+    const fv=typeMap[x.n]||'all';
+    const clickable=x.on&&x.c>0;
+    return'<div class="src'+(clickable?' src-click':'')+'" '+(clickable?'onclick="document.getElementById(\'fS\').value=\''+fv+'\';render();document.getElementById(\'feed-section\').scrollIntoView({behavior:\'smooth\'})"':'')+' style="'+(clickable?'cursor:pointer':'')+'">'
+      +'<div class="src-d" style="background:'+(x.on?x.cl:'#D4D4D8')+(x.on?';box-shadow:0 0 4px '+x.cl:'')+'"></div>'
+      +'<span class="src-n">'+esc(x.n)+(x.sub?' <span style="color:var(--t3)">'+esc(x.sub)+'</span>':'')+'</span>'
+      +(x.c!=null?'<span class="src-c">'+x.c+'</span>':'')
+      +(!x.on&&x.lk?'<a href="/auth/setup">Connect</a>':'')
+      +'</div>'}).join('')}
   draw();
 }
 
