@@ -582,50 +582,53 @@ app.get('/api/bing', async (req, res) => {
   }
 });
 
-// ── API: GOOGLE CUSTOM SEARCH ──────────────────────────────────────────────────
-// Free tier: 100 queries/day — set up at https://programmablesearchengine.google.com
+// ── API: GOOGLE NEWS ───────────────────────────────────────────────────────────
+// Free, no API key — uses Google News RSS feeds
 app.get('/api/google', async (req, res) => {
-  if (!CONFIG.GOOGLE_CSE_KEY || !CONFIG.GOOGLE_CSE_ID) return res.json([]);
-
   try {
-    const items = await cached('google_cse', 30 * 60 * 1000, async () => {
+    const items = await cached('google_news', 15 * 60 * 1000, async () => {
+      const parser = new xml2js.Parser({ explicitArray: false, trim: true });
       const results = [];
-      // Search top 3 keywords to stay within daily quota
-      const keywords = CONFIG.KEYWORDS.slice(0, 3);
 
-      for (const kw of keywords) {
+      for (const kw of CONFIG.KEYWORDS) {
         try {
-          const { data } = await axios.get('https://www.googleapis.com/customsearch/v1', {
-            params: {
-              key: CONFIG.GOOGLE_CSE_KEY,
-              cx: CONFIG.GOOGLE_CSE_ID,
-              q: `"${kw}"`,
-              sort: 'date',
-              num: 10,
-              dateRestrict: 'm1', // last month
-            },
-            timeout: 10000,
+          const url = `https://news.google.com/rss/search?q=%22${encodeURIComponent(kw)}%22&hl=en-US&gl=US&ceid=US:en`;
+          const { data } = await axios.get(url, {
+            timeout: 8000,
+            headers: { 'User-Agent': 'Mozilla/5.0 (compatible; SRILabsMonitor/2.0)' },
           });
+          const result = await parser.parseStringPromise(data);
+          const entries = result?.rss?.channel?.item;
+          if (!entries) continue;
+          const list = Array.isArray(entries) ? entries : [entries];
 
-          (data.items || []).forEach((item, i) => {
-            results.push({
-              id:          `gcse-${kw.replace(/\s/g,'')}-${i}-${Date.now()}`,
-              type:        'news',
-              sourceName:  item.displayLink || 'Google Search',
-              title:       item.title || '',
-              description: item.snippet || '',
-              url:         item.link || '',
-              date:        item.pagemap?.metatags?.[0]?.['article:published_time']
-                        || item.pagemap?.metatags?.[0]?.['og:updated_time']
-                        || new Date().toISOString(),
-              sentiment:   analyzeSentiment((item.title || '') + ' ' + (item.snippet || '')),
-            });
+          list.forEach((item, i) => {
+            const title = stripHtml(item.title || '');
+            const source = item.source?._ || item.source || '';
+            const desc = stripHtml(item.description || '');
+            const link = item.link || '';
+            const date = item.pubDate || '';
+
+            if (title) {
+              results.push({
+                id:          `gnews-${kw.replace(/\s/g,'')}-${i}-${Date.now()}`,
+                type:        'news',
+                sourceName:  typeof source === 'string' ? source : (source.toString() || 'Google News'),
+                title,
+                description: desc.slice(0, 300),
+                url:         link,
+                date:        date ? new Date(date).toISOString() : new Date().toISOString(),
+                sentiment:   analyzeSentiment(title + ' ' + desc),
+                matchedKeyword: kw,
+              });
+            }
           });
         } catch (e) {
-          console.warn(`[Google CSE] Search error for "${kw}":`, e.message);
+          console.warn(`[Google News] Error for "${kw}":`, e.message);
         }
       }
 
+      // Deduplicate by title
       const seen = new Set();
       return results.filter(r => {
         const key = r.title.slice(0, 60).toLowerCase();
@@ -635,10 +638,10 @@ app.get('/api/google', async (req, res) => {
       });
     });
 
-    console.log(`[Google CSE] ${items.length} results`);
+    console.log(`[Google News] ${items.length} articles`);
     res.json(items);
   } catch (err) {
-    console.error('[Google CSE] Error:', err.message);
+    console.error('[Google News] Error:', err.message);
     res.json([]);
   }
 });
@@ -1026,8 +1029,8 @@ app.listen(PORT, () => {
   console.log(`  Websites   → ${CONFIG.WEBSITES.map(w => w.baseUrl).join(', ')}`);
   const tokens = loadTokensCompat();
   console.log(`  Reddit     → free (no key needed)`);
-  console.log(`  Bing News  → ${CONFIG.BING_API_KEY ? 'configured' : 'add BING_API_KEY to .env'}`);
-  console.log(`  Google CSE → ${CONFIG.GOOGLE_CSE_KEY ? 'configured' : 'add GOOGLE_CSE_KEY + GOOGLE_CSE_ID to .env'}`);
+  console.log(`  Google News→ free (RSS feeds)`);
+  console.log(`  Bing News  → ${CONFIG.BING_API_KEY ? 'configured' : 'add BING_API_KEY to .env (optional)'}`);
   console.log(`  Instagram  → @${CONFIG.INSTAGRAM_HANDLE} (${tokens?.igAccountId ? 'connected' : 'pending → visit /auth/meta'})`);
   console.log(`  Facebook   → ${tokens?.pageId ? 'connected (' + (tokens.pageName || tokens.pageId) + ')' : 'pending → visit /auth/meta'}`);
   console.log();
