@@ -9,381 +9,312 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
     *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
     :root {
-      --sidebar:  #0F172A;
-      --sidebar-h:#1E293B;
-      --bg:       #F8FAFC;
-      --card:     #FFFFFF;
-      --border:   #E2E8F0;
-      --text:     #0F172A;
-      --text-2:   #334155;
-      --muted:    #94A3B8;
-      --dim:      #64748B;
-      --accent:   #6366F1;
-      --accent-l: #EEF2FF;
-      --pos:      #10B981;
-      --pos-l:    #D1FAE5;
-      --neg:      #EF4444;
-      --neg-l:    #FEE2E2;
-      --neu:      #F59E0B;
-      --neu-l:    #FEF3C7;
-      --ig:       #E1306C;
-      --fb:       #1877F2;
-      --radius:   10px;
+      --bg-0:#09090B; --bg-1:#18181B; --bg-2:#27272A; --bg-3:#3F3F46;
+      --border:rgba(255,255,255,.06); --border-2:rgba(255,255,255,.1);
+      --t0:#FAFAFA; --t1:#D4D4D8; --t2:#A1A1AA; --t3:#71717A;
+      --accent:#8B5CF6; --accent-2:#A78BFA; --accent-bg:rgba(139,92,246,.1);
+      --pos:#34D399; --pos-bg:rgba(52,211,153,.1);
+      --neg:#FB7185; --neg-bg:rgba(251,113,133,.1);
+      --neu:#FBBF24; --neu-bg:rgba(251,191,36,.1);
+      --r:12px; --r-sm:8px; --r-full:9999px;
+      --shadow:0 4px 24px rgba(0,0,0,.25);
     }
-    body { font-family:'Inter',system-ui,-apple-system,sans-serif; background:var(--bg); color:var(--text); display:flex; min-height:100vh; font-size:14px; }
 
-    /* ── SIDEBAR ─────────────────────────────────────────── */
-    .sidebar { width:230px; background:var(--sidebar); display:flex; flex-direction:column; position:fixed; top:0; left:0; bottom:0; z-index:50; }
-    .sb-logo { padding:24px 22px 20px; border-bottom:1px solid rgba(255,255,255,.08); }
-    .sb-logo-mark { display:flex; align-items:center; gap:10px; }
-    .sb-logo-icon { width:34px; height:34px; background:var(--accent); border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:12px; color:#fff; letter-spacing:-.5px; }
-    .sb-logo-text { color:#F1F5F9; font-size:15px; font-weight:700; letter-spacing:-.3px; }
-    .sb-logo-sub { color:#475569; font-size:11px; margin-top:2px; font-weight:500; }
-    .sb-nav { padding:16px 0; flex:1; }
-    .sb-section { padding:0 16px; margin-bottom:20px; }
-    .sb-section-label { font-size:10px; font-weight:700; letter-spacing:1px; color:#475569; text-transform:uppercase; padding:0 6px; margin-bottom:8px; }
-    .sb-link { display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:8px; color:#94A3B8; font-size:13px; font-weight:500; cursor:pointer; transition:all .15s; text-decoration:none; }
-    .sb-link:hover { background:rgba(255,255,255,.06); color:#CBD5E1; }
-    .sb-link.active { background:rgba(99,102,241,.15); color:#A5B4FC; }
-    .sb-link-icon { width:18px; text-align:center; font-size:14px; flex-shrink:0; opacity:.7; }
-    .sb-divider { height:1px; background:rgba(255,255,255,.06); margin:8px 16px; }
-    .sb-footer { padding:16px 20px; border-top:1px solid rgba(255,255,255,.06); }
-    .sb-connect { display:flex; align-items:center; gap:8px; padding:8px 10px; border-radius:8px; font-size:12px; font-weight:500; color:#94A3B8; text-decoration:none; transition:all .15s; }
-    .sb-connect:hover { background:rgba(255,255,255,.06); color:#CBD5E1; }
-    .sb-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
-    .sb-dot.on { background:var(--pos); }
-    .sb-dot.off { background:#475569; }
-    .sb-connect-label { flex:1; }
+    body { font-family:'Inter',system-ui,sans-serif; background:var(--bg-0); color:var(--t0); min-height:100vh; font-size:13px; line-height:1.5; }
 
-    /* ── MAIN ────────────────────────────────────────────── */
-    .main { margin-left:230px; flex:1; min-width:0; }
-
-    /* ── TOP BAR ─────────────────────────────────────────── */
-    .topbar { height:56px; background:var(--card); border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; padding:0 28px; position:sticky; top:0; z-index:40; }
-    .tb-left { display:flex; align-items:center; gap:14px; }
-    .tb-title { font-size:15px; font-weight:700; color:var(--text); }
-    .tb-live { display:flex; align-items:center; gap:6px; }
-    .tb-live-dot { width:7px; height:7px; background:var(--pos); border-radius:50%; animation:pulse 2s infinite; }
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
-    .tb-live-text { font-size:11px; color:var(--dim); font-weight:500; }
+    /* ── TOPBAR ──────────────────────────────────────── */
+    .topbar { height:56px; background:var(--bg-1); border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 24px; position:sticky; top:0; z-index:100; backdrop-filter:blur(12px); background:rgba(24,24,27,.85); }
+    .tb-logo { display:flex; align-items:center; gap:10px; margin-right:32px; }
+    .tb-logo-icon { width:30px; height:30px; background:linear-gradient(135deg,var(--accent),#6D28D9); border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:10px; color:#fff; letter-spacing:-.3px; }
+    .tb-logo-text { font-size:14px; font-weight:700; color:var(--t0); letter-spacing:-.3px; }
+    .tb-badge { font-size:10px; font-weight:600; color:var(--accent-2); background:var(--accent-bg); padding:3px 8px; border-radius:var(--r-full); letter-spacing:.3px; }
+    .tb-nav { display:flex; gap:2px; margin-right:auto; }
+    .tb-tab { padding:8px 14px; border-radius:var(--r-sm); font-size:12px; font-weight:500; color:var(--t3); cursor:pointer; border:none; background:none; font-family:inherit; transition:all .2s; }
+    .tb-tab:hover { color:var(--t1); background:rgba(255,255,255,.04); }
+    .tb-tab.active { color:var(--t0); background:rgba(255,255,255,.08); }
     .tb-right { display:flex; align-items:center; gap:14px; }
-    .tb-time { font-size:12px; color:var(--muted); }
-    .tb-btn { background:var(--accent); color:#fff; border:none; padding:7px 16px; border-radius:7px; font-size:12px; font-weight:600; cursor:pointer; font-family:inherit; transition:opacity .15s; }
-    .tb-btn:hover { opacity:.9; }
-    .tb-btn:disabled { opacity:.4; cursor:not-allowed; }
-    .tb-btn-ghost { background:transparent; border:1px solid var(--border); color:var(--text-2); padding:7px 14px; border-radius:7px; font-size:12px; font-weight:500; cursor:pointer; font-family:inherit; transition:all .15s; }
-    .tb-btn-ghost:hover { border-color:#CBD5E1; background:#F1F5F9; }
+    .tb-live { display:flex; align-items:center; gap:6px; }
+    .tb-dot { width:6px; height:6px; background:var(--pos); border-radius:50%; box-shadow:0 0 8px rgba(52,211,153,.5); animation:pulse 2.5s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;box-shadow:0 0 8px rgba(52,211,153,.5)} 50%{opacity:.5;box-shadow:0 0 16px rgba(52,211,153,.3)} }
+    .tb-live-text { font-size:11px; color:var(--t3); font-weight:500; }
+    .tb-time { font-size:11px; color:var(--t3); }
+    .tb-btn { background:rgba(255,255,255,.06); color:var(--t1); border:1px solid var(--border-2); padding:6px 14px; border-radius:var(--r-sm); font-size:12px; font-weight:500; cursor:pointer; font-family:inherit; transition:all .2s; }
+    .tb-btn:hover { background:rgba(255,255,255,.1); color:var(--t0); border-color:rgba(255,255,255,.15); }
+    .tb-btn:disabled { opacity:.3; cursor:not-allowed; }
+    .tb-btn-accent { background:var(--accent); border-color:var(--accent); color:#fff; }
+    .tb-btn-accent:hover { background:#7C3AED; }
 
-    /* ── CONTENT ─────────────────────────────────────────── */
-    .content { padding:24px 28px 48px; }
+    /* ── CONTENT ─────────────────────────────────────── */
+    .content { max-width:1320px; margin:0 auto; padding:24px 24px 64px; }
 
-    /* ── KPI STRIP ───────────────────────────────────────── */
-    .kpi-row { display:grid; grid-template-columns:repeat(6,1fr); gap:14px; margin-bottom:24px; }
-    .kpi { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:18px 20px; }
-    .kpi-label { font-size:11px; font-weight:600; color:var(--dim); text-transform:uppercase; letter-spacing:.5px; margin-bottom:8px; }
-    .kpi-val { font-size:32px; font-weight:800; line-height:1; color:var(--text); letter-spacing:-.5px; }
-    .kpi-val.pos { color:var(--pos); }
-    .kpi-val.neg { color:var(--neg); }
-    .kpi-val.neu { color:var(--neu); }
-    .kpi-footer { display:flex; align-items:center; gap:6px; margin-top:8px; }
-    .kpi-pct { font-size:12px; font-weight:600; padding:2px 6px; border-radius:4px; }
-    .kpi-pct.pos { background:var(--pos-l); color:#065F46; }
-    .kpi-pct.neg { background:var(--neg-l); color:#991B1B; }
-    .kpi-pct.neu { background:var(--neu-l); color:#92400E; }
-    .kpi-sub { font-size:11px; color:var(--muted); }
-    .kpi-bar { height:3px; background:var(--border); border-radius:3px; margin-top:10px; overflow:hidden; }
-    .kpi-bar-fill { height:100%; border-radius:3px; transition:width .6s ease; }
+    /* ── SECTION ─────────────────────────────────────── */
+    .section { margin-bottom:24px; }
+    .section-label { font-size:11px; font-weight:600; color:var(--t3); text-transform:uppercase; letter-spacing:.8px; margin-bottom:12px; }
 
-    /* ── KEYWORD PILLS ───────────────────────────────────── */
-    .kw-strip { display:flex; align-items:center; gap:8px; margin-bottom:24px; flex-wrap:wrap; }
-    .kw-label { font-size:11px; font-weight:600; color:var(--dim); text-transform:uppercase; letter-spacing:.5px; }
-    .kw-pill { padding:5px 14px; border-radius:20px; font-size:12px; font-weight:500; cursor:pointer; border:1px solid var(--border); background:var(--card); color:var(--text-2); transition:all .15s; }
-    .kw-pill:hover { border-color:#CBD5E1; background:#F1F5F9; }
-    .kw-pill.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+    /* ── ANIMATION ───────────────────────────────────── */
+    @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+    .fade-up { animation:fadeUp .4s ease-out both; }
+    .delay-1 { animation-delay:.05s; }
+    .delay-2 { animation-delay:.1s; }
+    .delay-3 { animation-delay:.15s; }
+    .delay-4 { animation-delay:.2s; }
+    .delay-5 { animation-delay:.25s; }
 
-    /* ── CHARTS ──────────────────────────────────────────── */
-    .charts-row { display:grid; grid-template-columns:1fr 300px; gap:14px; margin-bottom:24px; }
-    .panel { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); }
-    .panel-head { padding:16px 20px 0; display:flex; align-items:center; justify-content:space-between; }
-    .panel-title { font-size:12px; font-weight:700; color:var(--dim); text-transform:uppercase; letter-spacing:.4px; }
+    /* ── KPI CARDS ───────────────────────────────────── */
+    .kpi-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; }
+    .kpi { background:var(--bg-1); border:1px solid var(--border); border-radius:var(--r); padding:20px; position:relative; overflow:hidden; transition:border-color .2s, box-shadow .2s; }
+    .kpi:hover { border-color:var(--border-2); box-shadow:var(--shadow); }
+    .kpi::before { content:''; position:absolute; left:0; top:0; bottom:0; width:3px; border-radius:0 3px 3px 0; }
+    .kpi.total::before { background:var(--accent); }
+    .kpi.pos::before { background:var(--pos); }
+    .kpi.neg::before { background:var(--neg); }
+    .kpi.news::before { background:#60A5FA; }
+    .kpi.reddit::before { background:#FB923C; }
+    .kpi.social::before { background:#C084FC; }
+    .kpi-label { font-size:11px; font-weight:600; color:var(--t3); text-transform:uppercase; letter-spacing:.5px; margin-bottom:10px; }
+    .kpi-val { font-size:36px; font-weight:800; line-height:1; letter-spacing:-1px; }
+    .kpi-val.c-accent { color:var(--accent-2); }
+    .kpi-val.c-pos { color:var(--pos); }
+    .kpi-val.c-neg { color:var(--neg); }
+    .kpi-val.c-blue { color:#60A5FA; }
+    .kpi-val.c-orange { color:#FB923C; }
+    .kpi-val.c-purple { color:#C084FC; }
+    .kpi-foot { display:flex; align-items:center; gap:6px; margin-top:10px; }
+    .kpi-tag { font-size:10px; font-weight:600; padding:2px 8px; border-radius:var(--r-full); }
+    .kpi-tag.pos { background:var(--pos-bg); color:var(--pos); }
+    .kpi-tag.neg { background:var(--neg-bg); color:var(--neg); }
+    .kpi-tag.neu { background:var(--neu-bg); color:var(--neu); }
+    .kpi-sub { font-size:11px; color:var(--t3); }
+    .kpi-bar { height:2px; background:var(--bg-2); border-radius:2px; margin-top:12px; overflow:hidden; }
+    .kpi-bar-fill { height:100%; border-radius:2px; transition:width .8s cubic-bezier(.4,0,.2,1); }
+
+    /* ── CHARTS ──────────────────────────────────────── */
+    .charts-grid { display:grid; grid-template-columns:1fr 320px; gap:12px; }
+    .panel { background:var(--bg-1); border:1px solid var(--border); border-radius:var(--r); transition:border-color .2s; }
+    .panel:hover { border-color:var(--border-2); }
+    .panel-head { padding:18px 20px 0; }
+    .panel-title { font-size:12px; font-weight:600; color:var(--t2); text-transform:uppercase; letter-spacing:.4px; }
     .panel-body { padding:16px 20px 20px; }
-    .chart-wrap { height:200px; }
-    .donut-wrap { height:200px; display:flex; align-items:center; justify-content:center; }
+    .chart-h { height:210px; }
+    .donut-h { height:210px; display:flex; align-items:center; justify-content:center; }
 
-    /* ── SOCIAL STRIP ────────────────────────────────────── */
-    .social-strip { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:24px; }
-    .social-mini { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:16px 20px; display:flex; align-items:center; gap:16px; }
-    .social-mini-icon { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
-    .social-mini-icon.ig { background:linear-gradient(135deg,#833AB4,#E1306C,#F77737); }
-    .social-mini-icon.fb { background:var(--fb); }
-    .social-mini-icon span { filter:brightness(0) invert(1); }
-    .social-mini-info { flex:1; min-width:0; }
-    .social-mini-name { font-size:13px; font-weight:600; color:var(--text); }
-    .social-mini-sub { font-size:11px; color:var(--muted); margin-top:1px; }
-    .social-mini-stats { display:flex; gap:16px; }
-    .social-mini-stat { text-align:right; }
-    .social-mini-stat-val { font-size:18px; font-weight:700; color:var(--text); line-height:1; }
-    .social-mini-stat-lbl { font-size:10px; color:var(--muted); margin-top:2px; text-transform:uppercase; letter-spacing:.3px; }
-    .social-pending-link { font-size:12px; font-weight:600; color:var(--accent); text-decoration:none; margin-left:auto; }
-    .social-pending-link:hover { text-decoration:underline; }
+    /* ── SOURCES STRIP ───────────────────────────────── */
+    .sources-strip { display:flex; gap:10px; flex-wrap:wrap; }
+    .source-chip { display:flex; align-items:center; gap:8px; background:var(--bg-1); border:1px solid var(--border); border-radius:var(--r); padding:10px 16px; transition:all .2s; cursor:default; }
+    .source-chip:hover { border-color:var(--border-2); background:var(--bg-2); }
+    .source-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+    .source-dot.on { box-shadow:0 0 6px currentColor; }
+    .source-name { font-size:12px; font-weight:500; color:var(--t1); }
+    .source-count { font-size:12px; font-weight:700; color:var(--t0); margin-left:auto; }
+    .source-chip a { font-size:11px; color:var(--accent-2); text-decoration:none; font-weight:500; margin-left:4px; }
+    .source-chip a:hover { text-decoration:underline; }
 
-    /* ── MENTION TABLE ───────────────────────────────────── */
-    .table-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
-    .table-title { font-size:13px; font-weight:700; color:var(--text); }
-    .table-count { font-size:12px; color:var(--muted); }
-    .table-filters { display:flex; gap:8px; align-items:center; margin-bottom:14px; flex-wrap:wrap; }
-    .tf-select { border:1px solid var(--border); border-radius:7px; padding:7px 12px; font-size:12px; font-family:inherit; color:var(--text-2); background:var(--card); cursor:pointer; transition:border-color .15s; }
-    .tf-select:focus { outline:none; border-color:var(--accent); }
-    .tf-search { border:1px solid var(--border); border-radius:7px; padding:7px 12px; font-size:12px; font-family:inherit; color:var(--text); background:var(--card); flex:1; min-width:200px; transition:border-color .15s; }
-    .tf-search:focus { outline:none; border-color:var(--accent); }
-    .tf-divider { width:1px; height:20px; background:var(--border); }
+    /* ── MENTION TABLE ───────────────────────────────── */
+    .table-panel { background:var(--bg-1); border:1px solid var(--border); border-radius:var(--r); overflow:hidden; }
+    .table-toolbar { padding:14px 18px; display:flex; align-items:center; gap:10px; border-bottom:1px solid var(--border); flex-wrap:wrap; }
+    .tf { border:1px solid var(--border); border-radius:var(--r-sm); padding:7px 12px; font-size:12px; font-family:inherit; color:var(--t1); background:var(--bg-0); transition:border-color .2s; }
+    .tf:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-bg); }
+    .tf-search { flex:1; min-width:180px; }
+    .tf-count { margin-left:auto; font-size:11px; color:var(--t3); }
+    .tf-export { background:none; border:1px solid var(--border); border-radius:var(--r-sm); padding:7px 12px; font-size:11px; font-weight:500; color:var(--t2); cursor:pointer; font-family:inherit; transition:all .2s; }
+    .tf-export:hover { color:var(--t0); border-color:var(--border-2); }
 
-    .mention-list { display:flex; flex-direction:column; gap:1px; background:var(--border); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
-    .mention-row { background:var(--card); display:grid; grid-template-columns:42px 64px 1fr 100px 90px; gap:0; align-items:center; padding:12px 16px; transition:background .1s; }
-    .mention-row:hover { background:#F8FAFC; }
-    .mr-icon { width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:14px; }
-    .mr-icon.news { background:#EFF6FF; }
-    .mr-icon.alerts { background:#F0FDF4; }
-    .mr-icon.reddit { background:#FFF1F0; }
-    .mr-icon.social { background:var(--accent-l); }
-    .mr-type { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; padding:3px 8px; border-radius:4px; text-align:center; }
-    .mr-type.news { background:#DBEAFE; color:#1E40AF; }
-    .mr-type.alerts { background:#DCFCE7; color:#166534; }
-    .mr-type.reddit { background:#FFF1F0; color:#FF4500; }
-    .mr-type.social { background:#EDE9FE; color:#5B21B6; }
+    .mention-list { }
+    .mention-row { display:grid; grid-template-columns:44px 70px 1fr 90px 80px; align-items:center; padding:12px 18px; border-bottom:1px solid var(--border); transition:background .15s; }
+    .mention-row:last-child { border-bottom:none; }
+    .mention-row:hover { background:rgba(255,255,255,.02); }
+    .mr-icon { width:34px; height:34px; border-radius:var(--r-sm); display:flex; align-items:center; justify-content:center; font-size:14px; }
+    .mr-icon.news { background:rgba(96,165,250,.1); }
+    .mr-icon.alerts { background:rgba(52,211,153,.1); }
+    .mr-icon.reddit { background:rgba(251,146,60,.1); }
+    .mr-icon.social { background:rgba(192,132,252,.1); }
+    .mr-type { font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.4px; padding:3px 8px; border-radius:4px; text-align:center; display:inline-block; }
+    .mr-type.news { background:rgba(96,165,250,.1); color:#60A5FA; }
+    .mr-type.alerts { background:rgba(52,211,153,.1); color:#34D399; }
+    .mr-type.reddit { background:rgba(251,146,60,.1); color:#FB923C; }
+    .mr-type.social { background:rgba(192,132,252,.1); color:#C084FC; }
     .mr-body { padding:0 16px; min-width:0; }
-    .mr-title { font-size:13px; font-weight:500; color:var(--text); line-height:1.4; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .mr-title a { color:inherit; text-decoration:none; }
-    .mr-title a:hover { color:var(--accent); }
-    .mr-meta { font-size:11px; color:var(--muted); margin-top:2px; display:flex; gap:6px; align-items:center; }
-    .mr-meta-dot { width:3px; height:3px; background:var(--muted); border-radius:50%; }
-    .mr-sentiment { text-align:center; }
-    .mr-badge { display:inline-block; padding:4px 10px; border-radius:20px; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.3px; }
-    .mr-badge.positive { background:var(--pos-l); color:#065F46; }
-    .mr-badge.neutral { background:var(--neu-l); color:#92400E; }
-    .mr-badge.negative { background:var(--neg-l); color:#991B1B; }
-    .mr-date { font-size:11px; color:var(--muted); text-align:right; }
+    .mr-title { font-size:13px; font-weight:500; color:var(--t0); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:1.4; }
+    .mr-title a { color:inherit; text-decoration:none; transition:color .15s; }
+    .mr-title a:hover { color:var(--accent-2); }
+    .mr-meta { font-size:11px; color:var(--t3); margin-top:2px; display:flex; align-items:center; gap:5px; }
+    .mr-meta-sep { width:3px; height:3px; background:var(--bg-3); border-radius:50%; }
+    .mr-sent { text-align:center; }
+    .mr-badge { display:inline-block; padding:4px 10px; border-radius:var(--r-full); font-size:10px; font-weight:600; letter-spacing:.2px; }
+    .mr-badge.positive { background:var(--pos-bg); color:var(--pos); }
+    .mr-badge.neutral { background:var(--neu-bg); color:var(--neu); }
+    .mr-badge.negative { background:var(--neg-bg); color:var(--neg); }
+    .mr-date { font-size:11px; color:var(--t3); text-align:right; }
 
-    /* ── LOADING / EMPTY ─────────────────────────────────── */
-    .loading { display:flex; flex-direction:column; align-items:center; padding:60px 20px; color:var(--muted); gap:12px; }
-    .spinner { width:28px; height:28px; border:2.5px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin .7s linear infinite; }
+    /* ── STATES ──────────────────────────────────────── */
+    .loading-state { display:flex; flex-direction:column; align-items:center; padding:60px; gap:12px; }
+    .spinner { width:24px; height:24px; border:2.5px solid var(--bg-3); border-top-color:var(--accent); border-radius:50%; animation:spin .6s linear infinite; }
     @keyframes spin { to{transform:rotate(360deg)} }
-    .loading-text { font-size:13px; }
-    .empty-state { text-align:center; padding:48px 20px; color:var(--muted); font-size:13px; }
+    .loading-text { font-size:12px; color:var(--t3); }
+    .empty-state { text-align:center; padding:48px; color:var(--t3); font-size:13px; }
 
-    /* ── RESPONSIVE ──────────────────────────────────────── */
-    @media(max-width:1100px) { .kpi-row{grid-template-columns:repeat(3,1fr)} .charts-row{grid-template-columns:1fr} .social-strip{grid-template-columns:1fr} }
-    @media(max-width:768px) { .sidebar{display:none} .main{margin-left:0} .kpi-row{grid-template-columns:repeat(2,1fr)} .mention-row{grid-template-columns:42px 1fr 80px} .mr-type,.mr-date{display:none} }
+    /* ── RESPONSIVE ──────────────────────────────────── */
+    @media(max-width:1100px) { .kpi-grid{grid-template-columns:repeat(3,1fr)} .charts-grid{grid-template-columns:1fr} }
+    @media(max-width:768px) { .kpi-grid{grid-template-columns:repeat(2,1fr)} .mention-row{grid-template-columns:44px 1fr 80px} .mr-type,.mr-date{display:none} .content{padding:16px} }
   </style>
 </head>
 <body>
 
-<!-- ── SIDEBAR ──────────────────────────────────────────── -->
-<aside class="sidebar">
-  <div class="sb-logo">
-    <div class="sb-logo-mark">
-      <div class="sb-logo-icon">SRI</div>
-      <div>
-        <div class="sb-logo-text">Brand Monitor</div>
-        <div class="sb-logo-sub">SRI Labs</div>
-      </div>
-    </div>
+<!-- TOPBAR -->
+<header class="topbar">
+  <div class="tb-logo">
+    <div class="tb-logo-icon">SRI</div>
+    <span class="tb-logo-text">Brand Monitor</span>
   </div>
-  <nav class="sb-nav">
-    <div class="sb-section">
-      <div class="sb-section-label">Monitor</div>
-      <a class="sb-link active" href="#"><span class="sb-link-icon">&#9632;</span> Overview</a>
-      <a class="sb-link" href="#mentions-section"><span class="sb-link-icon">&#9776;</span> Mentions</a>
-    </div>
-    <div class="sb-divider"></div>
-    <div class="sb-section">
-      <div class="sb-section-label">Tracking</div>
-      <div id="sbKeywords"></div>
-    </div>
+  <span class="tb-badge">INTERNAL</span>
+  <nav class="tb-nav">
+    <button class="tb-tab active">Overview</button>
+    <button class="tb-tab" onclick="document.getElementById('mentions-section').scrollIntoView({behavior:'smooth'})">Mentions</button>
   </nav>
-  <div class="sb-footer">
-    <div style="font-size:10px;font-weight:600;color:#475569;text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Connections</div>
-    <div id="sbIgStatus">
-      <a class="sb-connect" href="/auth/meta"><span class="sb-dot off"></span><span class="sb-connect-label">Instagram</span><span style="font-size:11px;color:#475569">Connect</span></a>
-    </div>
-    <div id="sbFbStatus">
-      <a class="sb-connect" href="/auth/meta"><span class="sb-dot off"></span><span class="sb-connect-label">Facebook</span><span style="font-size:11px;color:#475569">Connect</span></a>
-    </div>
+  <div class="tb-right">
+    <div class="tb-live"><div class="tb-dot"></div><span class="tb-live-text">Live</span></div>
+    <span class="tb-time" id="lastUpdated"></span>
+    <button class="tb-btn" onclick="exportCsv()">Export</button>
+    <button class="tb-btn tb-btn-accent" id="refreshBtn" onclick="loadAll()">Refresh</button>
   </div>
-</aside>
+</header>
 
-<!-- ── MAIN ────────────────────────────────────────────── -->
-<div class="main">
-  <header class="topbar">
-    <div class="tb-left">
-      <span class="tb-title">Overview</span>
-      <div class="tb-live"><div class="tb-live-dot"></div><span class="tb-live-text">Live</span></div>
-    </div>
-    <div class="tb-right">
-      <span class="tb-time" id="lastUpdated"></span>
-      <button class="tb-btn-ghost" onclick="exportCsv()">Export CSV</button>
-      <button class="tb-btn" id="refreshBtn" onclick="loadAll()">Refresh</button>
-    </div>
-  </header>
+<div class="content">
 
-  <div class="content">
-
-    <!-- KPIs -->
-    <div class="kpi-row">
-      <div class="kpi">
+  <!-- KPIs -->
+  <div class="section">
+    <div class="kpi-grid">
+      <div class="kpi total fade-up">
         <div class="kpi-label">Total Mentions</div>
-        <div class="kpi-val" id="kTotal">-</div>
-        <div class="kpi-footer"><span class="kpi-sub">across all sources</span></div>
+        <div class="kpi-val c-accent" id="kTotal">-</div>
+        <div class="kpi-foot"><span class="kpi-sub">across all sources</span></div>
       </div>
-      <div class="kpi">
+      <div class="kpi pos fade-up delay-1">
         <div class="kpi-label">Positive</div>
-        <div class="kpi-val pos" id="kPos">-</div>
-        <div class="kpi-footer"><span class="kpi-pct pos" id="kPosP">-</span><span class="kpi-sub">of total</span></div>
+        <div class="kpi-val c-pos" id="kPos">-</div>
+        <div class="kpi-foot"><span class="kpi-tag pos" id="kPosP">-</span><span class="kpi-sub">of total</span></div>
         <div class="kpi-bar"><div class="kpi-bar-fill" id="kPosBar" style="background:var(--pos);width:0%"></div></div>
       </div>
-      <div class="kpi">
+      <div class="kpi neg fade-up delay-2">
         <div class="kpi-label">Negative</div>
-        <div class="kpi-val neg" id="kNeg">-</div>
-        <div class="kpi-footer"><span class="kpi-pct neg" id="kNegP">-</span><span class="kpi-sub">of total</span></div>
+        <div class="kpi-val c-neg" id="kNeg">-</div>
+        <div class="kpi-foot"><span class="kpi-tag neg" id="kNegP">-</span><span class="kpi-sub">of total</span></div>
         <div class="kpi-bar"><div class="kpi-bar-fill" id="kNegBar" style="background:var(--neg);width:0%"></div></div>
       </div>
-      <div class="kpi">
+      <div class="kpi news fade-up delay-3">
         <div class="kpi-label">News</div>
-        <div class="kpi-val" id="kNews">-</div>
-        <div class="kpi-footer"><span class="kpi-sub">News API + Bing</span></div>
+        <div class="kpi-val c-blue" id="kNews">-</div>
+        <div class="kpi-foot"><span class="kpi-sub">News API + Bing</span></div>
       </div>
-      <div class="kpi">
+      <div class="kpi reddit fade-up delay-4">
         <div class="kpi-label">Reddit</div>
-        <div class="kpi-val" id="kReddit" style="color:#FF4500">-</div>
-        <div class="kpi-footer"><span class="kpi-sub">Posts &amp; comments</span></div>
-      </div>
-      <div class="kpi">
-        <div class="kpi-label">Social</div>
-        <div class="kpi-val" id="kSocial">-</div>
-        <div class="kpi-footer"><span class="kpi-sub">IG + FB</span></div>
+        <div class="kpi-val c-orange" id="kReddit">-</div>
+        <div class="kpi-foot"><span class="kpi-sub">Brand discussions</span></div>
       </div>
     </div>
+  </div>
 
-    <!-- Social strip -->
-    <div class="social-strip">
-      <div class="social-mini" id="igMini"></div>
-      <div class="social-mini" id="fbMini"></div>
-    </div>
-
-    <!-- Keyword pills -->
-    <div class="kw-strip">
-      <span class="kw-label">Filter by keyword</span>
-      <div id="kwPills" style="display:contents"></div>
-    </div>
-
-    <!-- Charts -->
-    <div class="charts-row">
-      <div class="panel">
+  <!-- Charts -->
+  <div class="section">
+    <div class="charts-grid">
+      <div class="panel fade-up delay-1">
         <div class="panel-head"><span class="panel-title">Mention Volume &mdash; 14 Days</span></div>
-        <div class="panel-body"><div class="chart-wrap"><canvas id="timelineChart"></canvas></div></div>
+        <div class="panel-body"><div class="chart-h"><canvas id="timelineChart"></canvas></div></div>
       </div>
-      <div class="panel">
-        <div class="panel-head"><span class="panel-title">Sources</span></div>
-        <div class="panel-body"><div class="donut-wrap"><canvas id="sourceChart"></canvas></div></div>
+      <div class="panel fade-up delay-2">
+        <div class="panel-head"><span class="panel-title">Sentiment</span></div>
+        <div class="panel-body"><div class="donut-h"><canvas id="sentimentChart"></canvas></div></div>
       </div>
     </div>
+  </div>
 
-    <!-- Mentions table -->
-    <div id="mentions-section">
-      <div class="table-head">
-        <span class="table-title">All Mentions</span>
-        <span class="table-count" id="mentionCount"></span>
-      </div>
-      <div class="table-filters">
-        <select class="tf-select" id="filterSource" onchange="applyFilters()">
+  <!-- Sources -->
+  <div class="section">
+    <div class="section-label">Connected Sources</div>
+    <div class="sources-strip" id="sourcesStrip"></div>
+  </div>
+
+  <!-- Keywords -->
+  <div class="section">
+    <div class="section-label">Filter by keyword</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap" id="kwPills"></div>
+  </div>
+
+  <!-- Mentions -->
+  <div class="section" id="mentions-section">
+    <div class="table-panel">
+      <div class="table-toolbar">
+        <select class="tf" id="filterSource" onchange="applyFilters()">
           <option value="all">All Sources</option>
           <option value="news">News</option>
-          <option value="alerts">Google Alerts</option>
+          <option value="alerts">Alerts</option>
           <option value="reddit">Reddit</option>
           <option value="social">Social</option>
         </select>
-        <select class="tf-select" id="filterSentiment" onchange="applyFilters()">
+        <select class="tf" id="filterSentiment" onchange="applyFilters()">
           <option value="all">All Sentiment</option>
           <option value="positive">Positive</option>
           <option value="neutral">Neutral</option>
           <option value="negative">Negative</option>
         </select>
-        <select class="tf-select" id="filterSort" onchange="applyFilters()">
+        <select class="tf" id="filterSort" onchange="applyFilters()">
           <option value="date">Newest</option>
           <option value="sentiment">Sentiment</option>
         </select>
-        <div class="tf-divider"></div>
-        <input class="tf-search" type="text" id="searchInput" placeholder="Search mentions..." oninput="applyFilters()" />
+        <input class="tf tf-search" type="text" id="searchInput" placeholder="Search mentions..." oninput="applyFilters()" />
+        <span class="tf-count" id="mentionCount"></span>
       </div>
-      <div id="feedContainer">
-        <div class="loading"><div class="spinner"></div><span class="loading-text">Fetching mentions...</span></div>
+      <div class="mention-list" id="feedContainer">
+        <div class="loading-state"><div class="spinner"></div><span class="loading-text">Scanning all sources...</span></div>
       </div>
     </div>
-
   </div>
+
 </div>
 
 <script>
+Chart.defaults.color = '#71717A';
+Chart.defaults.borderColor = 'rgba(255,255,255,0.04)';
+Chart.defaults.font.family = 'Inter';
+
 let allMentions = [];
 let timelineChart = null;
-let sourceChart = null;
+let sentimentChart = null;
 let activeKeyword = null;
 
-function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function timeAgo(ds) {
-  const diff = Date.now() - new Date(ds).getTime();
-  if (isNaN(diff)) return '';
-  const m = Math.floor(diff/60000);
-  if (m<1) return 'now';
-  if (m<60) return m+'m';
-  const h = Math.floor(m/60);
-  if (h<24) return h+'h';
-  return Math.floor(h/24)+'d';
-}
-function fmtNum(n) {
-  if (n==null) return '-';
-  if (n>=1e6) return (n/1e6).toFixed(1)+'M';
-  if (n>=1e3) return (n/1e3).toFixed(1)+'K';
-  return String(n);
-}
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function timeAgo(ds){const d=Date.now()-new Date(ds).getTime();if(isNaN(d))return'';const m=Math.floor(d/6e4);if(m<1)return'now';if(m<60)return m+'m';const h=Math.floor(m/60);if(h<24)return h+'h';return Math.floor(h/24)+'d'}
+function fmtNum(n){if(n==null)return'-';if(n>=1e6)return(n/1e6).toFixed(1)+'M';if(n>=1e3)return(n/1e3).toFixed(1)+'K';return String(n)}
 
-// ── Config + keyword pills ───────────────────────────────
-async function loadConfig() {
-  try {
-    const cfg = await fetch('/api/config').then(r=>r.json());
-    const pills = document.getElementById('kwPills');
-    const sbKw = document.getElementById('sbKeywords');
-    cfg.keywords.forEach(kw => {
-      // Pill
-      const el = document.createElement('span');
-      el.className = 'kw-pill';
-      el.textContent = kw;
-      el.onclick = () => {
-        if (activeKeyword===kw) { activeKeyword=null; document.querySelectorAll('.kw-pill').forEach(t=>t.classList.remove('active')); }
-        else { activeKeyword=kw; document.querySelectorAll('.kw-pill').forEach(t=>t.classList.remove('active')); el.classList.add('active'); }
+async function loadConfig(){
+  try{
+    const cfg=await fetch('/api/config').then(r=>r.json());
+    const c=document.getElementById('kwPills');
+    cfg.keywords.forEach(kw=>{
+      const el=document.createElement('span');
+      el.style.cssText='padding:5px 14px;border-radius:9999px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--border);color:var(--t2);transition:all .2s;background:var(--bg-1)';
+      el.textContent=kw;
+      el.onmouseenter=()=>{if(activeKeyword!==kw)el.style.borderColor='rgba(255,255,255,.15)'};
+      el.onmouseleave=()=>{if(activeKeyword!==kw)el.style.borderColor='var(--border)'};
+      el.onclick=()=>{
+        if(activeKeyword===kw){activeKeyword=null;document.querySelectorAll('#kwPills span').forEach(t=>{t.style.background='var(--bg-1)';t.style.color='var(--t2)';t.style.borderColor='var(--border)'})}
+        else{activeKeyword=kw;document.querySelectorAll('#kwPills span').forEach(t=>{t.style.background='var(--bg-1)';t.style.color='var(--t2)';t.style.borderColor='var(--border)'});el.style.background='var(--accent)';el.style.color='#fff';el.style.borderColor='var(--accent)'}
         applyFilters();
       };
-      pills.appendChild(el);
-      // Sidebar
-      const sb = document.createElement('a');
-      sb.className = 'sb-link';
-      sb.href = '#';
-      sb.innerHTML = '<span class="sb-link-icon" style="font-size:8px;opacity:.4">&#9679;</span> ' + esc(kw);
-      sb.onclick = (e) => { e.preventDefault(); el.click(); };
-      sbKw.appendChild(sb);
+      c.appendChild(el);
     });
-  } catch(_){}
+  }catch(_){}
 }
 
-// ── Load all data ────────────────────────────────────────
-async function loadAll() {
-  const btn = document.getElementById('refreshBtn');
-  btn.disabled = true; btn.textContent = 'Loading...';
-  document.getElementById('feedContainer').innerHTML = '<div class="loading"><div class="spinner"></div><span class="loading-text">Fetching mentions...</span></div>';
+async function loadAll(){
+  const btn=document.getElementById('refreshBtn');
+  btn.disabled=true;btn.textContent='Loading...';
+  document.getElementById('feedContainer').innerHTML='<div class="loading-state"><div class="spinner"></div><span class="loading-text">Scanning all sources...</span></div>';
 
-  try {
-    const [newsData, alertsData, redditData, bingData, googleData, igMentions, fbData] = await Promise.all([
+  try{
+    const[newsData,alertsData,redditData,bingData,googleData,igMentions,fbData]=await Promise.all([
       fetch('/api/news').then(r=>r.json()).catch(()=>[]),
       fetch('/api/alerts').then(r=>r.json()).catch(()=>[]),
       fetch('/api/reddit').then(r=>r.json()).catch(()=>[]),
@@ -393,55 +324,52 @@ async function loadAll() {
       fetch('/api/facebook').then(r=>r.json()).catch(()=>({status:'pending'})),
     ]);
 
-    const fbItems = [
+    const fbItems=[
       ...((fbData.posts||[]).map(p=>({...p,type:'social',platform:'facebook'}))),
       ...((fbData.mentions||[]).map(m=>({...m,type:'social',platform:'facebook'}))),
     ];
 
-    const seen = new Set();
-    allMentions = [...(newsData||[]),...(alertsData||[]),...(redditData||[]),...(bingData||[]),...(googleData||[]),...(igMentions||[]),...fbItems]
-      .filter(m => { if(!m.title) return false; const k=m.title.slice(0,80).toLowerCase(); if(seen.has(k)) return false; seen.add(k); return true; })
-      .sort((a,b) => new Date(b.date)-new Date(a.date));
+    const seen=new Set();
+    allMentions=[...(newsData||[]),...(alertsData||[]),...(redditData||[]),...(bingData||[]),...(googleData||[]),...(igMentions||[]),...fbItems]
+      .filter(m=>{if(!m.title)return false;const k=m.title.slice(0,80).toLowerCase();if(seen.has(k))return false;seen.add(k);return true})
+      .sort((a,b)=>new Date(b.date)-new Date(a.date));
 
     updateKpis();
     updateCharts();
+    updateSources(newsData,alertsData,redditData,igMentions,fbData);
     applyFilters();
-    document.getElementById('lastUpdated').textContent = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-  } catch(err) {
+    document.getElementById('lastUpdated').textContent=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  }catch(err){
     console.error(err);
-    document.getElementById('feedContainer').innerHTML = '<div class="empty-state">Could not load data. Check that the server is running.</div>';
-  } finally {
-    btn.disabled = false; btn.textContent = 'Refresh';
+    document.getElementById('feedContainer').innerHTML='<div class="empty-state">Could not load data.</div>';
+  }finally{
+    btn.disabled=false;btn.textContent='Refresh';
   }
 }
 
-// ── KPIs ─────────────────────────────────────────────────
-function updateKpis() {
-  const t = allMentions.length;
-  const p = allMentions.filter(m=>m.sentiment==='positive').length;
-  const n = allMentions.filter(m=>m.sentiment==='negative').length;
-  const news = allMentions.filter(m=>m.type==='news').length;
-  const reddit = allMentions.filter(m=>m.type==='reddit').length;
-  const soc = allMentions.filter(m=>m.type==='social').length;
-  const pct = v => t ? Math.round(v/t*100)+'%' : '-';
+function updateKpis(){
+  const t=allMentions.length;
+  const p=allMentions.filter(m=>m.sentiment==='positive').length;
+  const n=allMentions.filter(m=>m.sentiment==='negative').length;
+  const news=allMentions.filter(m=>m.type==='news').length;
+  const reddit=allMentions.filter(m=>m.type==='reddit').length;
+  const pct=v=>t?Math.round(v/t*100)+'%':'-';
 
-  document.getElementById('kTotal').textContent = t;
-  document.getElementById('kPos').textContent = p;
-  document.getElementById('kPosP').textContent = pct(p);
-  document.getElementById('kPosBar').style.width = t ? Math.round(p/t*100)+'%' : '0%';
-  document.getElementById('kNeg').textContent = n;
-  document.getElementById('kNegP').textContent = pct(n);
-  document.getElementById('kNegBar').style.width = t ? Math.round(n/t*100)+'%' : '0%';
-  document.getElementById('kNews').textContent = news;
-  document.getElementById('kReddit').textContent = reddit;
-  document.getElementById('kSocial').textContent = soc;
+  document.getElementById('kTotal').textContent=t;
+  document.getElementById('kPos').textContent=p;
+  document.getElementById('kPosP').textContent=pct(p);
+  document.getElementById('kPosBar').style.width=t?Math.round(p/t*100)+'%':'0%';
+  document.getElementById('kNeg').textContent=n;
+  document.getElementById('kNegP').textContent=pct(n);
+  document.getElementById('kNegBar').style.width=t?Math.round(n/t*100)+'%':'0%';
+  document.getElementById('kNews').textContent=news;
+  document.getElementById('kReddit').textContent=reddit;
 }
 
-// ── Charts ───────────────────────────────────────────────
-function updateCharts() {
-  const DAYS=14, labels=[], posD=[], neuD=[], negD=[];
-  for (let i=DAYS-1;i>=0;i--) {
-    const d=new Date(); d.setDate(d.getDate()-i);
+function updateCharts(){
+  const DAYS=14,labels=[],posD=[],neuD=[],negD=[];
+  for(let i=DAYS-1;i>=0;i--){
+    const d=new Date();d.setDate(d.getDate()-i);
     const key=d.toISOString().slice(0,10);
     labels.push(d.toLocaleDateString([],{month:'short',day:'numeric'}));
     const day=allMentions.filter(m=>m.date&&m.date.startsWith(key));
@@ -449,154 +377,117 @@ function updateCharts() {
     neuD.push(day.filter(m=>m.sentiment==='neutral').length);
     negD.push(day.filter(m=>m.sentiment==='negative').length);
   }
-  if(timelineChart) timelineChart.destroy();
-  timelineChart = new Chart(document.getElementById('timelineChart'),{
+  if(timelineChart)timelineChart.destroy();
+  const ctx=document.getElementById('timelineChart').getContext('2d');
+  const grad=ctx.createLinearGradient(0,0,0,210);
+  grad.addColorStop(0,'rgba(139,92,246,.2)');grad.addColorStop(1,'rgba(139,92,246,0)');
+  timelineChart=new Chart(ctx,{
     type:'bar',
-    data:{ labels, datasets:[
-      {label:'Positive',data:posD,backgroundColor:'#10B981',borderRadius:3,barPercentage:.7},
-      {label:'Neutral',data:neuD,backgroundColor:'#F59E0B',borderRadius:3,barPercentage:.7},
-      {label:'Negative',data:negD,backgroundColor:'#EF4444',borderRadius:3,barPercentage:.7},
+    data:{labels,datasets:[
+      {label:'Positive',data:posD,backgroundColor:'rgba(52,211,153,.7)',borderRadius:4,barPercentage:.65},
+      {label:'Neutral',data:neuD,backgroundColor:'rgba(251,191,36,.5)',borderRadius:4,barPercentage:.65},
+      {label:'Negative',data:negD,backgroundColor:'rgba(251,113,133,.6)',borderRadius:4,barPercentage:.65},
     ]},
     options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index'},
-      scales:{x:{stacked:true,grid:{display:false},ticks:{font:{size:10,family:'Inter'}}},y:{stacked:true,beginAtZero:true,ticks:{stepSize:1,font:{size:10,family:'Inter'}},grid:{color:'#F1F5F9'}}},
-      plugins:{legend:{position:'top',labels:{boxWidth:8,padding:16,font:{size:11,family:'Inter'}}}}
+      scales:{x:{stacked:true,grid:{display:false},ticks:{font:{size:10}}},y:{stacked:true,beginAtZero:true,ticks:{stepSize:1,font:{size:10}},grid:{color:'rgba(255,255,255,.03)'}}},
+      plugins:{legend:{display:true,position:'top',labels:{boxWidth:8,padding:16,font:{size:11},usePointStyle:true,pointStyle:'circle'}}}
     }
   });
 
-  const newsC=allMentions.filter(m=>m.type==='news').length;
-  const alertsC=allMentions.filter(m=>m.type==='alerts').length;
-  const redditC=allMentions.filter(m=>m.type==='reddit').length;
-  const socC=allMentions.filter(m=>m.type==='social').length;
-  if(sourceChart) sourceChart.destroy();
-  sourceChart = new Chart(document.getElementById('sourceChart'),{
+  const p=allMentions.filter(m=>m.sentiment==='positive').length;
+  const ne=allMentions.filter(m=>m.sentiment==='neutral').length;
+  const ng=allMentions.filter(m=>m.sentiment==='negative').length;
+  if(sentimentChart)sentimentChart.destroy();
+  sentimentChart=new Chart(document.getElementById('sentimentChart'),{
     type:'doughnut',
-    data:{labels:['News','Alerts','Reddit','Social'],datasets:[{data:[newsC,alertsC,redditC,socC],backgroundColor:['#6366F1','#10B981','#FF4500','#F59E0B'],borderWidth:0,hoverOffset:6}]},
-    options:{cutout:'72%',plugins:{legend:{position:'bottom',labels:{boxWidth:8,padding:14,font:{size:11,family:'Inter'}}}}}
+    data:{labels:['Positive','Neutral','Negative'],datasets:[{data:[p,ne,ng],backgroundColor:['#34D399','#FBBF24','#FB7185'],borderWidth:0,hoverOffset:6,borderRadius:4}]},
+    options:{cutout:'75%',plugins:{legend:{position:'bottom',labels:{boxWidth:8,padding:16,font:{size:11},usePointStyle:true,pointStyle:'circle',color:'#A1A1AA'}}}}
   });
 }
 
-// ── Social panels ────────────────────────────────────────
-async function loadInstagram() {
-  const panel = document.getElementById('igMini');
-  const sbStatus = document.getElementById('sbIgStatus');
-  try {
-    const ig = await fetch('/api/instagram').then(r=>r.json());
-    if (ig.status==='connected') {
-      panel.innerHTML = `
-        <div class="social-mini-icon ig"><span>&#9635;</span></div>
-        <div class="social-mini-info"><div class="social-mini-name">@${esc(ig.handle)}</div><div class="social-mini-sub">Instagram Business</div></div>
-        <div class="social-mini-stats">
-          <div class="social-mini-stat"><div class="social-mini-stat-val">${fmtNum(ig.followers)}</div><div class="social-mini-stat-lbl">Followers</div></div>
-          <div class="social-mini-stat"><div class="social-mini-stat-val">${ig.engagementRate}%</div><div class="social-mini-stat-lbl">Eng Rate</div></div>
-        </div>`;
-      sbStatus.innerHTML = '<div class="sb-connect"><span class="sb-dot on"></span><span class="sb-connect-label">Instagram</span><span style="font-size:11px;color:#10B981">Live</span></div>';
-    } else {
-      panel.innerHTML = '<div class="social-mini-icon ig"><span>&#9635;</span></div><div class="social-mini-info"><div class="social-mini-name">Instagram</div><div class="social-mini-sub">Not connected</div></div><a class="social-pending-link" href="/auth/meta">Connect &rarr;</a>';
-    }
-  } catch(_) {
-    panel.innerHTML = '<div class="social-mini-icon ig"><span>&#9635;</span></div><div class="social-mini-info"><div class="social-mini-name">Instagram</div><div class="social-mini-sub">Not connected</div></div><a class="social-pending-link" href="/auth/meta">Connect &rarr;</a>';
+function updateSources(news,alerts,reddit,ig,fb){
+  const strip=document.getElementById('sourcesStrip');
+  const items=[
+    {name:'News API',count:(news||[]).length,color:'#60A5FA',on:(news||[]).length>0},
+    {name:'Google Alerts',count:(alerts||[]).length,color:'#34D399',on:true},
+    {name:'Reddit',count:(reddit||[]).length,color:'#FB923C',on:(reddit||[]).length>0},
+    {name:'Instagram',color:'#E879F9',on:false,link:true},
+    {name:'Facebook',color:'#60A5FA',on:false,link:true},
+  ];
+  // Check IG/FB connection
+  fetch('/api/instagram').then(r=>r.json()).then(d=>{
+    if(d.status==='connected'){items[3].on=true;items[3].sub='@'+d.handle;renderStrip()}
+  }).catch(()=>{});
+  fetch('/api/facebook').then(r=>r.json()).then(d=>{
+    if(d.status==='connected'){items[4].on=true;items[4].sub=d.page?.name;renderStrip()}
+  }).catch(()=>{});
+
+  function renderStrip(){
+    strip.innerHTML=items.map(s=>`
+      <div class="source-chip">
+        <div class="source-dot ${s.on?'on':''}" style="color:${s.color};background:${s.on?s.color:'var(--bg-3)'}"></div>
+        <span class="source-name">${esc(s.name)}${s.sub?' <span style="color:var(--t3);font-size:11px">'+esc(s.sub)+'</span>':''}</span>
+        ${s.count!=null?'<span class="source-count">'+s.count+'</span>':''}
+        ${!s.on&&s.link?'<a href="/auth/meta">Connect</a>':''}
+      </div>`).join('');
   }
+  renderStrip();
 }
 
-async function loadFacebook() {
-  const panel = document.getElementById('fbMini');
-  const sbStatus = document.getElementById('sbFbStatus');
-  try {
-    const fb = await fetch('/api/facebook').then(r=>r.json());
-    if (fb.status==='connected'&&fb.page) {
-      panel.innerHTML = `
-        <div class="social-mini-icon fb"><span>&#9635;</span></div>
-        <div class="social-mini-info"><div class="social-mini-name">${esc(fb.page.name)}</div><div class="social-mini-sub">Facebook Page</div></div>
-        <div class="social-mini-stats">
-          <div class="social-mini-stat"><div class="social-mini-stat-val">${fmtNum(fb.page.fans)}</div><div class="social-mini-stat-lbl">Likes</div></div>
-          <div class="social-mini-stat"><div class="social-mini-stat-val">${fb.mentions?fb.mentions.length:0}</div><div class="social-mini-stat-lbl">Mentions</div></div>
-        </div>`;
-      sbStatus.innerHTML = '<div class="sb-connect"><span class="sb-dot on"></span><span class="sb-connect-label">Facebook</span><span style="font-size:11px;color:#10B981">Live</span></div>';
-    } else {
-      panel.innerHTML = '<div class="social-mini-icon fb"><span>&#9635;</span></div><div class="social-mini-info"><div class="social-mini-name">Facebook</div><div class="social-mini-sub">Not connected</div></div><a class="social-pending-link" href="/auth/meta">Connect &rarr;</a>';
-    }
-  } catch(_) {
-    panel.innerHTML = '<div class="social-mini-icon fb"><span>&#9635;</span></div><div class="social-mini-info"><div class="social-mini-name">Facebook</div><div class="social-mini-sub">Not connected</div></div><a class="social-pending-link" href="/auth/meta">Connect &rarr;</a>';
-  }
-}
-
-// ── Mention feed ─────────────────────────────────────────
-function applyFilters() {
+function applyFilters(){
   const src=document.getElementById('filterSource').value;
   const sent=document.getElementById('filterSentiment').value;
   const sort=document.getElementById('filterSort').value;
   const q=document.getElementById('searchInput').value.toLowerCase().trim();
 
-  let filtered = allMentions.filter(m => {
-    if(src!=='all'&&m.type!==src) return false;
-    if(sent!=='all'&&m.sentiment!==sent) return false;
-    if(q&&!((m.title||'').toLowerCase().includes(q)||(m.description||'').toLowerCase().includes(q))) return false;
-    if(activeKeyword) { const kw=activeKeyword.toLowerCase(); if(!((m.title||'').toLowerCase().includes(kw)||(m.description||'').toLowerCase().includes(kw))) return false; }
+  let filtered=allMentions.filter(m=>{
+    if(src!=='all'&&m.type!==src)return false;
+    if(sent!=='all'&&m.sentiment!==sent)return false;
+    if(q&&!((m.title||'').toLowerCase().includes(q)||(m.description||'').toLowerCase().includes(q)))return false;
+    if(activeKeyword){const kw=activeKeyword.toLowerCase();if(!((m.title||'').toLowerCase().includes(kw)||(m.description||'').toLowerCase().includes(kw)))return false}
     return true;
   });
-  if(sort==='sentiment') { const o={negative:0,neutral:1,positive:2}; filtered=filtered.slice().sort((a,b)=>(o[a.sentiment]||1)-(o[b.sentiment]||1)); }
+  if(sort==='sentiment'){const o={negative:0,neutral:1,positive:2};filtered=filtered.slice().sort((a,b)=>(o[a.sentiment]||1)-(o[b.sentiment]||1))}
 
-  document.getElementById('mentionCount').textContent = filtered.length+' mention'+(filtered.length!==1?'s':'');
-  const container = document.getElementById('feedContainer');
+  document.getElementById('mentionCount').textContent=filtered.length+' mention'+(filtered.length!==1?'s':'');
+  const c=document.getElementById('feedContainer');
+  if(!allMentions.length){c.innerHTML='<div class="loading-state"><div class="spinner"></div><span class="loading-text">Loading...</span></div>';return}
+  if(!filtered.length){c.innerHTML='<div class="empty-state">No mentions match your filters.</div>';return}
 
-  if(!allMentions.length) { container.innerHTML='<div class="loading"><div class="spinner"></div><span class="loading-text">Loading...</span></div>'; return; }
-  if(!filtered.length) { container.innerHTML='<div class="empty-state">No mentions match your filters.</div>'; return; }
-
-  container.innerHTML = '<div class="mention-list">'+filtered.map(m => {
-    const icons={news:'&#128240;',alerts:'&#128276;',reddit:'&#128488;',social:'&#128172;'};
-    const icon=icons[m.type]||'&#128196;';
+  c.innerHTML=filtered.map(m=>{
+    const icons={news:'&#9889;',alerts:'&#9883;',reddit:'&#9673;',social:'&#10022;'};
     const typeLabel=m.type==='reddit'?'Reddit':m.type==='social'?(m.platform==='facebook'?'Facebook':'Instagram'):m.type==='news'?'News':'Alert';
-    return `<div class="mention-row">
-      <div class="mr-icon ${esc(m.type)}">${icon}</div>
+    return`<div class="mention-row">
+      <div class="mr-icon ${esc(m.type)}">${icons[m.type]||'&#9679;'}</div>
       <div><span class="mr-type ${esc(m.type)}">${typeLabel}</span></div>
       <div class="mr-body">
         <div class="mr-title">${m.url?'<a href="'+esc(m.url)+'" target="_blank" rel="noopener">'+esc(m.title)+'</a>':esc(m.title)}</div>
-        <div class="mr-meta"><span>${esc(m.sourceName||'')}</span>${m.date?'<span class="mr-meta-dot"></span><span>'+timeAgo(m.date)+' ago</span>':''}</div>
+        <div class="mr-meta"><span>${esc(m.sourceName||'')}</span>${m.date?'<span class="mr-meta-sep"></span><span>'+timeAgo(m.date)+' ago</span>':''}</div>
       </div>
-      <div class="mr-sentiment"><span class="mr-badge ${esc(m.sentiment)}">${m.sentiment}</span></div>
+      <div class="mr-sent"><span class="mr-badge ${esc(m.sentiment)}">${m.sentiment}</span></div>
       <div class="mr-date">${m.date?new Date(m.date).toLocaleDateString([],{month:'short',day:'numeric'}):''}</div>
     </div>`;
-  }).join('')+'</div>';
+  }).join('');
 }
 
-// ── Export ────────────────────────────────────────────────
-function exportCsv() {
+function exportCsv(){
   const h=['Date','Type','Source','Title','Sentiment','URL'];
   const rows=allMentions.map(m=>[m.date?new Date(m.date).toISOString():'',m.type||'',m.sourceName||'','"'+(m.title||'').replace(/"/g,'""')+'"',m.sentiment||'',m.url||'']);
-  const csv=[h.join(','),...rows.map(r=>r.join(','))].join('\n');
   const a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.href=URL.createObjectURL(new Blob([[h,...rows].map(r=>r.join(',')).join('\n')],{type:'text/csv'}));
   a.download='sri-labs-mentions-'+new Date().toISOString().slice(0,10)+'.csv';
   a.click();
 }
 
-// ── OAuth redirect handling ──────────────────────────────
 (function(){
   const p=new URLSearchParams(location.search);
-  if(p.get('meta_connected')||p.get('ig_connected')){
-    const t=document.createElement('div');
-    t.style.cssText='position:fixed;top:16px;left:50%;transform:translateX(-50%);background:#10B981;color:#fff;padding:10px 24px;border-radius:8px;font-weight:600;font-size:13px;z-index:9999;font-family:Inter,sans-serif';
-    t.textContent='Social accounts connected';
-    document.body.appendChild(t); setTimeout(()=>t.remove(),3000);
-    history.replaceState({},'','/');
-  }
-  if(p.get('meta_error')||p.get('ig_error')){
-    const t=document.createElement('div');
-    t.style.cssText='position:fixed;top:16px;left:50%;transform:translateX(-50%);background:#EF4444;color:#fff;padding:10px 24px;border-radius:8px;font-weight:600;font-size:13px;z-index:9999;font-family:Inter,sans-serif';
-    t.textContent='Error: '+decodeURIComponent(p.get('meta_error')||p.get('ig_error')||'');
-    document.body.appendChild(t); setTimeout(()=>t.remove(),5000);
-    history.replaceState({},'','/');
-  }
+  const toast=(msg,bg)=>{const t=document.createElement('div');t.style.cssText='position:fixed;top:68px;left:50%;transform:translateX(-50%);background:'+bg+';color:#fff;padding:10px 24px;border-radius:10px;font-weight:600;font-size:13px;z-index:999;font-family:Inter,sans-serif;box-shadow:0 8px 32px rgba(0,0,0,.4)';t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),3500)};
+  if(p.get('meta_connected')||p.get('ig_connected')){toast('Connected successfully','#34D399');history.replaceState({},'','/')}
+  if(p.get('meta_error')||p.get('ig_error')){toast('Error: '+decodeURIComponent(p.get('meta_error')||p.get('ig_error')),'#FB7185');history.replaceState({},'','/')}
 })();
 
-// ── Auto-refresh ─────────────────────────────────────────
-setInterval(loadAll, 10*60*1000);
-setInterval(()=>{loadInstagram();loadFacebook();}, 15*60*1000);
-
-// ── Boot ─────────────────────────────────────────────────
+setInterval(loadAll,10*60*1000);
 loadConfig();
-loadInstagram();
-loadFacebook();
 loadAll();
 </script>
 </body>
