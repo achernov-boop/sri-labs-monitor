@@ -256,7 +256,7 @@ async function loadAll(){
     const cut=aD?new Date(Date.now()-aD*864e5):null;
     const seen=new Set();
     D=[...(nw||[]),...(al||[]),...(rd||[]),...(bi||[]),...(gn||[]),...(yt||[]),...(tt||[]),...(ig||[]),...fbI,...h]
-      .filter(m=>{if(!m.title)return false;const k=(m.url||m.title.slice(0,80)).toLowerCase();if(seen.has(k))return false;seen.add(k);if(cut){const d=new Date(m.date);if(isNaN(d)||d<cut)return false}return true})
+      .filter(m=>{if(!m.title)return false;const k=(m.url||m.title.slice(0,80)).toLowerCase();if(seen.has(k))return false;seen.add(k);if(cut){const d=new Date(m.date);if(isNaN(d)||d<cut)return false;if((m.type==='youtube'||m.type==='tiktok')&&m.relativeDate&&!m.relativeDate.match(/^\d+\s*(hour|minute|second|day)/i))return false}return true})
       .sort((a,b)=>new Date(b.date)-new Date(a.date));
     kpis();charts();sources(nw,al,rd,gn,yt,tt,ig,fb);render();
     document.getElementById('ts').textContent=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});

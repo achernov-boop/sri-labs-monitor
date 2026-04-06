@@ -3,3 +3,4 @@ node_modules/
 meta_tokens.json
 instagram_token.json
 mentions.db.json
+.vercel
