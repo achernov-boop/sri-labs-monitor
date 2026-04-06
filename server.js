@@ -560,8 +560,8 @@ app.get('/api/reddit', async (req, res) => {
   try {
     const items = await cached('reddit', 30 * 60 * 1000, async () => {
       const results = [];
-      // Search top 4 keywords to stay within rate limits
-      const keywords = CONFIG.KEYWORDS.slice(0, 4);
+      // Search top 3 keywords to stay within Vercel timeout
+      const keywords = CONFIG.KEYWORDS.slice(0, 3);
 
       for (const kw of keywords) {
         try {
@@ -594,7 +594,7 @@ app.get('/api/reddit', async (req, res) => {
           });
 
           // Respect Reddit rate limits
-          await new Promise(r => setTimeout(r, 1200));
+          await new Promise(r => setTimeout(r, 500));
         } catch (e) {
           console.warn(`[Reddit] Search error for "${kw}":`, e.message);
         }
