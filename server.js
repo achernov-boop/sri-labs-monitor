@@ -749,6 +749,25 @@ app.get('/api/youtube', async (req, res) => {
               const desc = video.detailedMetadataSnippets?.[0]?.snippetText?.runs?.map(r => r.text).join('') || '';
 
               if (title && videoId) {
+                // Convert relative date ("2 months ago") to ISO
+                let isoDate = new Date().toISOString();
+                if (dateText) {
+                  const m = dateText.match(/(\d+)\s+(second|minute|hour|day|week|month|year)/i);
+                  if (m) {
+                    const n = parseInt(m[1]);
+                    const unit = m[2].toLowerCase();
+                    const d = new Date();
+                    if (unit.startsWith('second')) d.setSeconds(d.getSeconds() - n);
+                    else if (unit.startsWith('minute')) d.setMinutes(d.getMinutes() - n);
+                    else if (unit.startsWith('hour')) d.setHours(d.getHours() - n);
+                    else if (unit.startsWith('day')) d.setDate(d.getDate() - n);
+                    else if (unit.startsWith('week')) d.setDate(d.getDate() - n * 7);
+                    else if (unit.startsWith('month')) d.setMonth(d.getMonth() - n);
+                    else if (unit.startsWith('year')) d.setFullYear(d.getFullYear() - n);
+                    isoDate = d.toISOString();
+                  }
+                }
+
                 results.push({
                   id:          `yt-${videoId}`,
                   type:        'youtube',
@@ -756,7 +775,7 @@ app.get('/api/youtube', async (req, res) => {
                   title:       title,
                   description: desc.slice(0, 300),
                   url:         `https://youtube.com/watch?v=${videoId}`,
-                  date:        dateText || new Date().toISOString(),
+                  date:        isoDate,
                   ...analyzeSentimentFull(title + ' ' + desc),
                   views:       viewText,
                   matchedKeyword: kw,
