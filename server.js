@@ -31,7 +31,8 @@ const CONFIG = {
     'RenewGlow',
     'KeeWee Shampoo',
     'StyleWrap Pro',
-    'skin research institute',
+    'Skin Research Institute skincare',
+    'skinresearchinstitute.com',
   ],
 
   GOOGLE_ALERT_FEEDS: [
@@ -520,7 +521,15 @@ app.get('/api/alerts', async (req, res) => {
           }
         })
       );
-      return items;
+      // Filter out false positives
+      const ALERT_EXCLUDE = ['singapore', 'sri lanka', 'sri lankan', 'colombo',
+        'dupilumab', 'autoimmune', 'atopic dermatitis', 'psoriasis'];
+      return items.filter(r => {
+        const text = (r.title + ' ' + r.description).toLowerCase();
+        if (['dryq','styleq','curlq','renewglow','keewee','stylewrap','srilabs','sri labs']
+            .some(k => text.includes(k))) return true;
+        return !ALERT_EXCLUDE.some(ex => text.includes(ex));
+      });
     });
     console.log(`[Alerts] ${all.length} items`);
     res.json(enrichAndPersist(all));
@@ -671,9 +680,22 @@ app.get('/api/google', async (req, res) => {
         }
       }
 
+      // Filter out false positives (Singapore skin institute, generic research, Sri Lanka)
+      const EXCLUDE = ['singapore', 'sri lanka', 'sri lankan', 'colombo', 'novotech cro',
+        'dermatology research', 'clinical trial', 'autoimmune', 'psoriasis', 'eczema',
+        'dupilumab', 'atopic dermatitis'];
+      const filtered = results.filter(r => {
+        const text = (r.title + ' ' + r.description).toLowerCase();
+        // If it matched a specific product keyword, always keep it
+        if (['dryq','styleq','curlq','renewglow','keewee','stylewrap','srilabs','sri labs']
+            .some(k => text.includes(k))) return true;
+        // Otherwise filter out known false positives
+        return !EXCLUDE.some(ex => text.includes(ex));
+      });
+
       // Deduplicate by title
       const seen = new Set();
-      return results.filter(r => {
+      return filtered.filter(r => {
         const key = r.title.slice(0, 60).toLowerCase();
         if (seen.has(key)) return false;
         seen.add(key);
