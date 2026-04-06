@@ -771,16 +771,19 @@ app.get('/api/youtube', async (req, res) => {
         }
       }
 
-      // Deduplicate
+      // Filter out SRI Labs' own channel + deduplicate
+      const OWN_CHANNELS = ['sri labs', 'skin research institute', 'sri_labs', 'srilabs'];
       const seen = new Set();
       return results.filter(r => {
         if (seen.has(r.id)) return false;
         seen.add(r.id);
+        const ch = (r.sourceName || '').toLowerCase().trim();
+        if (OWN_CHANNELS.some(own => ch === own || ch.includes(own))) return false;
         return true;
       });
     });
 
-    console.log(`[YouTube] ${items.length} videos`);
+    console.log(`[YouTube] ${items.length} videos (own channel excluded)`);
     res.json(enrichAndPersist(items));
   } catch (err) {
     console.error('[YouTube] Error:', err.message);
