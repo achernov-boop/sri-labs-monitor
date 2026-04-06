@@ -711,6 +711,86 @@ app.get('/api/google', async (req, res) => {
   }
 });
 
+// ── AUTH: MANUAL TOKEN SETUP (bypasses OAuth redirect) ────────────────────────
+app.get('/auth/setup', async (req, res) => {
+  const { token } = req.query;
+  if (!token) {
+    return res.send(`
+      <html><body style="font-family:Inter,sans-serif;max-width:500px;margin:60px auto;padding:20px">
+        <h2>Connect Instagram + Facebook</h2>
+        <p style="color:#666;margin:12px 0">Paste your access token from the <a href="https://developers.facebook.com/tools/explorer/" target="_blank">Graph API Explorer</a></p>
+        <form action="/auth/setup" method="get">
+          <textarea name="token" rows="4" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;font-size:13px" placeholder="Paste token here..."></textarea>
+          <button type="submit" style="margin-top:8px;background:#4F46E5;color:#fff;border:none;padding:10px 20px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer">Connect</button>
+        </form>
+      </body></html>
+    `);
+  }
+
+  const base = `https://graph.facebook.com/${CONFIG.META_API_VERSION}`;
+
+  try {
+    // Exchange for long-lived token
+    let longToken = token;
+    try {
+      const { data } = await axios.get(`${base}/oauth/access_token`, {
+        params: {
+          grant_type: 'fb_exchange_token',
+          client_id: CONFIG.META_APP_ID,
+          client_secret: CONFIG.META_APP_SECRET,
+          fb_exchange_token: token,
+        },
+      });
+      longToken = data.access_token || token;
+    } catch (_) {
+      console.log('[Setup] Could not exchange for long-lived token, using as-is');
+    }
+
+    // Get Pages
+    const { data: pagesData } = await axios.get(`${base}/me/accounts`, {
+      params: { access_token: longToken },
+    });
+    const pages = pagesData.data || [];
+
+    if (!pages.length) {
+      return res.send('<html><body style="font-family:sans-serif;padding:40px"><h3>No Facebook Pages found</h3><p>Make sure your account manages a Facebook Page linked to an Instagram Business account.</p><a href="/auth/setup">Try again</a></body></html>');
+    }
+
+    // Find Instagram Business Account
+    let igAccountId = null;
+    let bestPage = pages[0];
+
+    for (const page of pages) {
+      try {
+        const { data: pageData } = await axios.get(`${base}/${page.id}`, {
+          params: { fields: 'instagram_business_account,name,fan_count', access_token: page.access_token },
+        });
+        if (pageData.instagram_business_account?.id) {
+          igAccountId = pageData.instagram_business_account.id;
+          bestPage = { ...page, name: pageData.name, fanCount: pageData.fan_count };
+          break;
+        }
+      } catch (_) {}
+    }
+
+    saveTokens({
+      accessToken: bestPage.access_token,
+      igAccountId: igAccountId || null,
+      pageId: bestPage.id,
+      pageName: bestPage.name || 'Facebook Page',
+      pageToken: bestPage.access_token,
+      connectedAt: new Date().toISOString(),
+    });
+
+    console.log(`[Setup] Connected! Page: ${bestPage.name}, IG: ${igAccountId || 'none'}`);
+    res.redirect('/?meta_connected=1');
+
+  } catch (err) {
+    console.error('[Setup] Error:', err.response?.data || err.message);
+    res.send(`<html><body style="font-family:sans-serif;padding:40px"><h3>Error</h3><p>${err.response?.data?.error?.message || err.message}</p><a href="/auth/setup">Try again</a></body></html>`);
+  }
+});
+
 // ── AUTH: META OAUTH — Step 1: redirect ────────────────────────────────────────
 app.get('/auth/meta', (req, res) => {
   if (!CONFIG.META_APP_ID) {
